@@ -1,0 +1,1402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Al-Rowad English Department - Student Follow-Up & Intervention System</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        brand: {
+                            50: '#f0f7ff',
+                            100: '#e0effe',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        },
+                        gold: {
+                            400: '#fbbf24',
+                            500: '#f59e0b',
+                            600: '#d97706',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @media print {
+            @page {
+                size: A4 landscape;
+                margin: 6mm;
+            }
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            body { background: white !important; color: black !important; font-size: 10px !important; }
+            .shadow-lg, .shadow-md, .shadow-sm, .shadow { box-shadow: none !important; }
+            .border { border-color: #cbd5e1 !important; }
+            table { width: 100% !important; border-collapse: collapse !important; font-size: 9px !important; }
+            th, td { padding: 3px 4px !important; text-align: center !important; }
+            input, select { border: none !important; background: transparent !important; appearance: none !important; -webkit-appearance: none; font-size: 9px !important; }
+            .print-break-inside-avoid { break-inside: avoid; page-break-inside: avoid; }
+        }
+        .custom-scrollbar::-webkit-scrollbar { height: 6px; width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col">
+
+    <header class="bg-slate-900 text-white shadow-md border-b border-slate-800 no-print sticky top-0 z-30">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-wrap justify-between items-center gap-4">
+            <div class="flex items-center space-x-3">
+                <div class="bg-gradient-to-tr from-brand-700 to-sky-500 p-2.5 rounded-xl shadow-inner text-white flex items-center justify-center">
+                    <i class="fa-solid font-bold fa-graduation-cap text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg leading-tight tracking-wide">Al-Rowad International Schools</h1>
+                    <p class="text-xs text-sky-400 font-medium">English Department • Student Tracking & Intervention</p>
+                </div>
+            </div>
+
+            <!-- Quick Action & Global Stats -->
+            <div class="flex items-center space-x-3">
+                <span id="saveBadge" class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-900/60 text-emerald-300 border border-emerald-700/50">
+                    <i class="fa-solid fa-cloud-arrow-up mr-1.5 text-emerald-400"></i> Auto-Saved
+                </span>
+                <button onclick="syncToGoogleSheets()" class="px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-medium rounded-lg shadow-sm transition flex items-center">
+                    <i class="fa-solid fa-file-spreadsheet mr-1.5 text-emerald-200"></i> Sync Google Sheet
+                </button>
+                <button onclick="exportDataJSON()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium rounded-lg border border-slate-700 transition flex items-center">
+                    <i class="fa-solid fa-download mr-1.5 text-sky-400"></i> Backup JSON
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 w-full no-print">
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200/80 flex items-center space-x-4">
+                <div class="p-3 bg-blue-50 text-blue-600 rounded-lg"><i class="fa-solid fa-users text-lg"></i></div>
+                <div>
+                    <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Roster Count</p>
+                    <h3 id="statTotalStudents" class="text-xl font-bold text-slate-800">0</h3>
+                </div>
+            </div>
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200/80 flex items-center space-x-4">
+                <div class="p-3 bg-amber-50 text-amber-600 rounded-lg"><i class="fa-solid fa-triangle-exclamation text-lg"></i></div>
+                <div>
+                    <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Flagged Students</p>
+                    <h3 id="statFlagged" class="text-xl font-bold text-slate-800">0</h3>
+                </div>
+            </div>
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200/80 flex items-center space-x-4">
+                <div class="p-3 bg-purple-50 text-purple-600 rounded-lg"><i class="fa-solid fa-sliders text-lg"></i></div>
+                <div>
+                    <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Intervention Plans</p>
+                    <h3 id="statInterventions" class="text-xl font-bold text-slate-800">0</h3>
+                </div>
+            </div>
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200/80 flex items-center space-x-4">
+                <div class="p-3 bg-emerald-50 text-emerald-600 rounded-lg"><i class="fa-solid fa-comments text-lg"></i></div>
+                <div>
+                    <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Parent Logs</p>
+                    <h3 id="statParentLogs" class="text-xl font-bold text-slate-800">0</h3>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 w-full no-print">
+        <div class="border-b border-slate-200 flex space-x-2 sm:space-x-8 overflow-x-auto custom-scrollbar">
+            <button onclick="switchTab('weeklyTab')" id="btn-weeklyTab" class="tab-btn py-3 px-3 text-sm font-semibold border-b-2 border-brand-600 text-brand-700 whitespace-nowrap flex items-center">
+                <i class="fa-solid fa-table-cells mr-2"></i> Weekly Follow-Up Record
+            </button>
+            <button onclick="switchTab('parentTab')" id="btn-parentTab" class="tab-btn py-3 px-3 text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 whitespace-nowrap flex items-center">
+                <i class="fa-solid fa-phone-volume mr-2"></i> Parent Communication
+            </button>
+            <button onclick="switchTab('interventionTab')" id="btn-interventionTab" class="tab-btn py-3 px-3 text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 whitespace-nowrap flex items-center">
+                <i class="fa-solid fa-bullseye mr-2"></i> Intervention Plans
+            </button>
+            <button onclick="switchTab('individualTab')" id="btn-individualTab" class="tab-btn py-3 px-3 text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 whitespace-nowrap flex items-center">
+                <i class="fa-solid fa-id-card mr-2"></i> Individual Student Profile
+            </button>
+            <button onclick="switchTab('settingsTab')" id="btn-settingsTab" class="tab-btn py-3 px-3 text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 whitespace-nowrap flex items-center">
+                <i class="fa-solid fa-file-csv mr-2"></i> Data & Export
+            </button>
+        </div>
+    </nav>
+
+    <!-- MAIN CONTAINER -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 my-6 flex-grow w-full">
+
+        <section id="weeklyTab" class="tab-content space-y-6">
+            <!-- Filter & Class Header Form -->
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 space-y-4 no-print">
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Teacher Full Name</label>
+                        <input type="text" id="headerTeacher" oninput="saveHeaderInfo()" placeholder="e.g. Mr. Ahmad Hassan" class="w-full text-sm rounded-lg border-slate-300 border p-2 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Grade / Class</label>
+                        <input type="text" id="headerGrade" oninput="saveHeaderInfo()" placeholder="e.g. Grade 5 / A" class="w-full text-sm rounded-lg border-slate-300 border p-2 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Week No. & Date</label>
+                        <div class="flex space-x-2">
+                            <input type="text" id="headerWeek" oninput="saveHeaderInfo()" placeholder="Week 4" class="w-1/3 text-sm rounded-lg border-slate-300 border p-2 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                            <input type="date" id="headerDate" oninput="saveHeaderInfo()" class="w-2/3 text-sm rounded-lg border-slate-300 border p-2 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Subject</label>
+                        <input type="text" id="headerSubject" oninput="saveHeaderInfo()" placeholder="English Language" class="w-full text-sm rounded-lg border-slate-300 border p-2 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-100">
+                    <div class="flex items-center space-x-2">
+                        <button onclick="openAddStudentModal()" class="px-4 py-2 bg-brand-700 hover:bg-brand-800 text-white text-xs font-semibold rounded-lg shadow-sm transition flex items-center">
+                            <i class="fa-solid fa-plus mr-1.5"></i> Add Student
+                        </button>
+                        <button onclick="seedSampleData()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium rounded-lg transition">
+                            <i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Load Demo Data
+                        </button>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <input type="text" id="searchRoster" onkeyup="filterRosterTable()" placeholder="Search student name..." class="text-xs rounded-lg border-slate-300 border p-2 w-48 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                        <button onclick="window.print()" class="px-3 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold rounded-lg transition flex items-center">
+                            <i class="fa-solid fa-print mr-1.5"></i> Print Grid
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Printable Header Title -->
+            <div class="hidden print-only text-center mb-6">
+                <h2 class="text-xl font-bold uppercase">Al-Rowad International Schools</h2>
+                <h3 class="text-md font-semibold text-slate-700">English Department - Students Follow-Up Record</h3>
+                <div class="flex justify-around text-xs mt-3 border-b border-t py-2">
+                    <span><strong>Teacher:</strong> <span id="printTeacher">-</span></span>
+                    <span><strong>Grade/Class:</strong> <span id="printGrade">-</span></span>
+                    <span><strong>Subject:</strong> <span id="printSubject">-</span></span>
+                    <span><strong>Week:</strong> <span id="printWeek">-</span></span>
+                    <span><strong>Date:</strong> <span id="printDate">-</span></span>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="overflow-x-auto custom-scrollbar">
+                    <table class="w-full text-xs text-left text-slate-600" id="weeklyTable">
+                        <thead class="bg-slate-800 text-slate-200 uppercase font-semibold">
+                            <tr>
+                                <th class="p-3 text-center w-10">#</th>
+                                <th class="p-3 min-w-[150px]">Student Name</th>
+                                <th class="p-3 text-center min-w-[90px]">Att.</th>
+                                <th class="p-3 text-center min-w-[120px]">Particip.</th>
+                                <th class="p-3 text-center min-w-[70px]">Behav.</th>
+                                <th class="p-3 text-center min-w-[80px]">Class Work</th>
+                                <th class="p-3 text-center min-w-[80px]">Homework</th>
+                                <th class="p-3 text-center min-w-[70px]">Books</th>
+                                <th class="p-3 text-center min-w-[80px]">Quiz</th>
+                                <th class="p-3 text-center min-w-[80px]">Midterm</th>
+                                <th class="p-3 text-center min-w-[80px]">Project</th>
+                                <th class="p-3 text-center min-w-[80px]">Reading</th>
+                                <th class="p-3 text-center min-w-[80px]">Writing</th>
+                                <th class="p-3 text-center no-print min-w-[80px]">Flagged</th>
+                                <th class="p-3 text-center no-print min-w-[90px]">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="rosterTbody" class="divide-y divide-slate-200">
+                            <!-- Dynamic rows injected here -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Reference Legend Footer -->
+                <div class="p-4 bg-slate-50 border-t border-slate-200 text-xs text-slate-600 space-y-1">
+                    <div class="font-bold text-slate-700 uppercase tracking-wide text-[11px]">Marking Key & Reference Guide:</div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-2 pt-1 text-[11px]">
+                        <div><span class="font-semibold text-slate-800">Attendance:</span> P = Present | A = Absent | L = Late | E = Excused</div>
+                        <div><span class="font-semibold text-slate-800">Behavior:</span> ✓ = Excellent | T = Talking | I = Inattentive | Off = Off-Task</div>
+                        <div><span class="font-semibold text-slate-800">Work/Homework:</span> 3 = Complete | 2 = Partial | 1 = Not Done</div>
+                        <div><span class="font-semibold text-slate-800">Books & Materials:</span> Y = Brought | N = Missing | R = Repeated Issue</div>
+                        <div><span class="font-semibold text-slate-800">Reading & Writing:</span> E = Excellent | G = Good | D = Developing | N = Support Needed</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="parentTab" class="tab-content hidden space-y-6">
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex flex-wrap justify-between items-center gap-4 no-print">
+                <div>
+                    <h2 class="text-base font-bold text-slate-800">Parent Communication Log</h2>
+                    <p class="text-xs text-slate-500">Record calls, WhatsApp messages, emails, and parent-teacher meetings.</p>
+                </div>
+                <button onclick="openParentLogModal()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg shadow-sm transition flex items-center">
+                    <i class="fa-solid fa-plus mr-1.5"></i> Log New Contact
+                </button>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="overflow-x-auto custom-scrollbar">
+                    <table class="w-full text-xs text-left text-slate-600">
+                        <thead class="bg-slate-800 text-slate-200 uppercase font-semibold">
+                            <tr>
+                                <th class="p-3 min-w-[90px]">Date</th>
+                                <th class="p-3 min-w-[140px]">Student Name</th>
+                                <th class="p-3 min-w-[110px]">Method</th>
+                                <th class="p-3 min-w-[150px]">Reason for Contact</th>
+                                <th class="p-3 min-w-[200px]">Discussion Summary</th>
+                                <th class="p-3 min-w-[160px]">Agreed Action</th>
+                                <th class="p-3 min-w-[100px]">Follow-Up Date</th>
+                                <th class="p-3 text-center no-print w-16">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="parentLogTbody" class="divide-y divide-slate-200">
+                            <!-- Dynamic Parent Logs injected here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <section id="interventionTab" class="tab-content hidden space-y-6">
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex flex-wrap justify-between items-center gap-4 no-print">
+                <div>
+                    <h2 class="text-base font-bold text-slate-800">English Intervention Plans</h2>
+                    <p class="text-xs text-slate-500">Structured 4–6 week support framework for students performing below grade level.</p>
+                </div>
+                <button onclick="openInterventionModal()" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold rounded-lg shadow-sm transition flex items-center">
+                    <i class="fa-solid fa-plus mr-1.5"></i> Create New Plan
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- List of Active Plans -->
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 space-y-3">
+                    <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wide">Active Intervention Plans</h3>
+                    <div id="interventionList" class="space-y-2 max-h-[600px] overflow-y-auto custom-scrollbar pr-1">
+                        <!-- Items rendered dynamically -->
+                    </div>
+                </div>
+
+                <!-- Comprehensive View / Editor for Selected Plan -->
+                <div class="md:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-slate-200" id="planDetailContainer">
+                    <div class="text-center py-12 text-slate-400">
+                        <i class="fa-solid fa-clipboard-list text-4xl mb-3"></i>
+                        <p class="text-sm">Select an intervention plan from the left list or create a new one to view details.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="individualTab" class="tab-content hidden space-y-6">
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex flex-wrap items-center justify-between gap-4 no-print">
+                <div class="flex items-center space-x-3 w-full sm:w-auto">
+                    <label class="text-xs font-bold text-slate-600 uppercase">Select Student:</label>
+                    <select id="individualStudentSelect" onchange="renderIndividualProfile()" class="text-sm rounded-lg border-slate-300 border p-2 focus:ring-2 focus:ring-brand-600 focus:outline-none min-w-[200px]">
+                        <!-- Dynamic options -->
+                    </select>
+                </div>
+                <button onclick="window.print()" class="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold rounded-lg transition flex items-center">
+                    <i class="fa-solid fa-print mr-1.5"></i> Print Student Report
+                </button>
+            </div>
+
+            <div id="studentProfileContent" class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-6">
+                <!-- Profile rendered dynamically -->
+            </div>
+        </section>
+
+        <section id="settingsTab" class="tab-content hidden space-y-6">
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-6">
+                <div>
+                    <h2 class="text-base font-bold text-slate-800">Data Management & Google Sheets Sync</h2>
+                    <p class="text-xs text-slate-500">Sync weekly records, parent communication logs, and intervention plans under the teacher's full name.</p>
+                </div>
+
+                <!-- Google Sheets Direct Integration Section -->
+                <div class="p-5 border border-emerald-200 bg-emerald-50/50 rounded-xl space-y-4">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-3 text-emerald-800">
+                            <div class="p-2.5 bg-emerald-600 text-white rounded-lg shadow-sm">
+                                <i class="fa-solid fa-table-cells text-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-sm text-slate-800">Google Sheets Direct Integration</h3>
+                                <p class="text-xs text-slate-600">Syncs weekly roster, parent logs, and intervention tabs to your connected sheet.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Teacher Full Name</label>
+                            <input type="text" id="settingsTeacherFullName" oninput="syncTeacherNameFromSettings(this.value)" placeholder="Enter Full Name" class="w-full text-xs rounded-lg border-slate-300 border p-2 focus:ring-2 focus:ring-emerald-600 focus:outline-none">
+                        </div>
+                        <div class="flex items-end">
+                            <button onclick="syncToGoogleSheets()" id="btnSyncNow" class="w-full px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg shadow transition flex items-center justify-center">
+                                <i class="fa-solid fa-rotate mr-1.5"></i> Sync Now to Google Sheet
+                            </button>
+                        </div>
+                    </div>
+                    <div id="syncStatusMsg" class="text-xs font-medium text-slate-600 hidden"></div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+                    <!-- Export to CSV Section -->
+                    <div class="p-5 border border-slate-200 rounded-xl space-y-3 bg-slate-50">
+                        <div class="flex items-center space-x-3 text-brand-700">
+                            <i class="fa-solid fa-file-excel text-2xl"></i>
+                            <h3 class="font-bold text-sm text-slate-800">Export CSV for Google Sheets</h3>
+                        </div>
+                        <p class="text-xs text-slate-600">Download formatted CSV files compatible with Google Sheets, Excel, or Numbers.</p>
+                        <div class="flex flex-wrap gap-2 pt-2">
+                            <button onclick="exportCSV('weekly')" class="px-3 py-2 bg-brand-700 hover:bg-brand-800 text-white text-xs font-semibold rounded-lg transition">
+                                <i class="fa-solid fa-download mr-1"></i> Weekly Roster CSV
+                            </button>
+                            <button onclick="exportCSV('parent')" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg transition">
+                                <i class="fa-solid fa-download mr-1"></i> Parent Logs CSV
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Backup & Restore JSON Section -->
+                    <div class="p-5 border border-slate-200 rounded-xl space-y-3 bg-slate-50">
+                        <div class="flex items-center space-x-3 text-purple-700">
+                            <i class="fa-solid fa-database text-2xl"></i>
+                            <h3 class="font-bold text-sm text-slate-800">JSON Backup & Restore</h3>
+                        </div>
+                        <p class="text-xs text-slate-600">Save a backup file of your entire database or restore from a previous file.</p>
+                        <div class="flex flex-wrap gap-2 pt-2">
+                            <button onclick="exportDataJSON()" class="px-3 py-2 bg-purple-700 hover:bg-purple-800 text-white text-xs font-semibold rounded-lg transition">
+                                <i class="fa-solid fa-file-export mr-1"></i> Backup JSON
+                            </button>
+                            <label class="px-3 py-2 bg-slate-700 hover:bg-slate-800 text-white text-xs font-semibold rounded-lg cursor-pointer transition inline-flex items-center">
+                                <i class="fa-solid fa-file-import mr-1"></i> Restore JSON
+                                <input type="file" id="importJsonInput" accept=".json" onchange="importDataJSON(event)" class="hidden">
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Danger Zone -->
+                <div class="border-t border-slate-200 pt-6">
+                    <h3 class="text-xs font-bold text-red-600 uppercase tracking-wider mb-2">Danger Zone</h3>
+                    <div class="flex items-center justify-between bg-red-50 p-4 rounded-xl border border-red-200">
+                        <div>
+                            <p class="text-xs font-bold text-red-800">Reset All Local System Data</p>
+                            <p class="text-[11px] text-red-600">Clears all stored weekly records, parent logs, and intervention plans.</p>
+                        </div>
+                        <button onclick="confirmResetData()" class="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-lg transition">
+                            Clear Data
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-slate-900 text-slate-400 text-xs py-4 px-4 text-center border-t border-slate-800 no-print mt-auto">
+        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-2">
+            <p class="font-medium text-slate-300">Al-Rowad International Schools — English Department</p>
+            <p class="text-slate-400">Prepared by <span class="font-semibold text-sky-400">Malak Rajeh</span> &amp; Designed by <span class="font-semibold text-amber-400">Amanullah Khan</span></p>
+        </div>
+    </footer>
+
+    <!-- MODAL: ADD STUDENT -->
+    <div id="addStudentModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center hidden no-print p-4">
+        <div class="bg-white rounded-xl shadow-xl border border-slate-200 max-w-md w-full p-6 space-y-4">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="font-bold text-slate-800 text-sm">Add New Student to Roster</h3>
+                <button onclick="closeModal('addStudentModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="space-y-3 text-xs">
+                <div>
+                    <label class="block font-semibold text-slate-600 mb-1">Full Student Name</label>
+                    <input type="text" id="newStudentName" placeholder="e.g. Abdullah Al-Mansoor" class="w-full text-xs rounded-lg border-slate-300 border p-2 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                </div>
+                <div class="flex justify-end space-x-2 pt-3 border-t">
+                    <button type="button" onclick="closeModal('addStudentModal')" class="px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-100 rounded-lg">Cancel</button>
+                    <button type="button" onclick="saveNewStudent()" class="px-4 py-1.5 bg-brand-700 hover:bg-brand-800 text-white text-xs font-semibold rounded-lg">Add Student</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: PARENT LOG -->
+    <div id="parentLogModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center hidden no-print">
+        <div class="bg-white rounded-xl shadow-xl border border-slate-200 max-w-lg w-full p-6 space-y-4">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="font-bold text-slate-800 text-sm">Log Parent Communication</h3>
+                <button onclick="closeModal('parentLogModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="parentLogForm" onsubmit="saveParentLog(event)" class="space-y-3">
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Date</label>
+                        <input type="date" id="parentLogDate" required class="w-full text-sm rounded-lg border-slate-300 border p-2 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Student</label>
+                        <select id="parentLogStudentSelect" required class="w-full text-sm rounded-lg border-slate-300 border p-2 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                            <!-- Injected dynamically -->
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Communication Method</label>
+                    <select id="parentLogMethod" class="w-full text-sm rounded-lg border-slate-300 border p-2 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                        <option value="Phone Call">Phone Call</option>
+                        <option value="WhatsApp">WhatsApp</option>
+                        <option value="SMS">SMS</option>
+                        <option value="MYAIS Portal">MYAIS Portal</option>
+                        <option value="Email">Email</option>
+                        <option value="In-Person Meeting">In-Person Meeting</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Reason for Contact</label>
+                    <input type="text" id="parentLogReason" required placeholder="e.g. Repeated missing homework" class="w-full text-sm rounded-lg border-slate-300 border p-2 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Summary of Discussion</label>
+                    <textarea id="parentLogSummary" rows="2" placeholder="Parent response and key points..." class="w-full text-sm rounded-lg border-slate-300 border p-2 focus:ring-2 focus:ring-brand-600 focus:outline-none"></textarea>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Agreed Action</label>
+                        <input type="text" id="parentLogAgreed" placeholder="e.g. Home daily signature" class="w-full text-sm rounded-lg border-slate-300 border p-2 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Follow-Up Date</label>
+                        <input type="date" id="parentLogFollowUpDate" class="w-full text-sm rounded-lg border-slate-300 border p-2 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-2 pt-3 border-t">
+                    <button type="button" onclick="closeModal('parentLogModal')" class="px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-100 rounded-lg">Cancel</button>
+                    <button type="submit" class="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg">Save Log</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: INTERVENTION PLAN WIZARD -->
+    <div id="interventionModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center hidden no-print overflow-y-auto p-4">
+        <div class="bg-white rounded-xl shadow-xl border border-slate-200 max-w-2xl w-full p-6 space-y-4 my-8">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="font-bold text-slate-800 text-sm">Create English Intervention Plan</h3>
+                <button onclick="closeModal('interventionModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="interventionForm" onsubmit="saveInterventionPlan(event)" class="space-y-4 text-xs">
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-semibold text-slate-600 mb-1">Student</label>
+                        <select id="planStudentSelect" required class="w-full text-xs rounded-lg border-slate-300 border p-2 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                            <!-- Dynamic list -->
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-600 mb-1">Support Staff / Assistant</label>
+                        <input type="text" id="planSupportStaff" placeholder="e.g. Department Specialist" class="w-full text-xs rounded-lg border-slate-300 border p-2 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-semibold text-slate-600 mb-1">Start Date</label>
+                        <input type="date" id="planStartDate" required class="w-full text-xs rounded-lg border-slate-300 border p-2 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-600 mb-1">Review Date (4-6 weeks later)</label>
+                        <input type="date" id="planReviewDate" required class="w-full text-xs rounded-lg border-slate-300 border p-2 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                    </div>
+                </div>
+
+                <!-- Section 1: Areas of Weakness -->
+                <div class="border p-3 rounded-lg bg-slate-50 space-y-2">
+                    <span class="font-bold text-slate-700 uppercase tracking-wide">1. Area of Weakness (Tick 1 or 2)</span>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        <label class="flex items-center space-x-1.5"><input type="checkbox" name="weakness" value="Decoding / phonics" class="rounded border-slate-300"> <span>Decoding / phonics</span></label>
+                        <label class="flex items-center space-x-1.5"><input type="checkbox" name="weakness" value="Reading fluency" class="rounded border-slate-300"> <span>Reading fluency</span></label>
+                        <label class="flex items-center space-x-1.5"><input type="checkbox" name="weakness" value="Reading comprehension" class="rounded border-slate-300"> <span>Reading comprehension</span></label>
+                        <label class="flex items-center space-x-1.5"><input type="checkbox" name="weakness" value="Vocabulary" class="rounded border-slate-300"> <span>Vocabulary</span></label>
+                        <label class="flex items-center space-x-1.5"><input type="checkbox" name="weakness" value="Grammar" class="rounded border-slate-300"> <span>Grammar</span></label>
+                        <label class="flex items-center space-x-1.5"><input type="checkbox" name="weakness" value="Spelling" class="rounded border-slate-300"> <span>Spelling</span></label>
+                        <label class="flex items-center space-x-1.5"><input type="checkbox" name="weakness" value="Writing - sentences" class="rounded border-slate-300"> <span>Writing sentences</span></label>
+                        <label class="flex items-center space-x-1.5"><input type="checkbox" name="weakness" value="Writing - paragraphs" class="rounded border-slate-300"> <span>Writing paragraphs</span></label>
+                        <label class="flex items-center space-x-1.5"><input type="checkbox" name="weakness" value="Work completion / effort" class="rounded border-slate-300"> <span>Work completion</span></label>
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-600 mb-1">One sentence description (what you actually see in class):</label>
+                        <input type="text" id="planProblemDesc" placeholder="e.g. Struggles to form complete sentences without capital letters." class="w-full text-xs rounded-lg border-slate-300 border p-2 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                    </div>
+                </div>
+
+                <!-- Section 4: Goal -->
+                <div class="border p-3 rounded-lg bg-slate-50 space-y-2">
+                    <span class="font-bold text-slate-700 uppercase tracking-wide">4. Target Goal (SMART Statement)</span>
+                    <textarea id="planGoalText" rows="2" placeholder='e.g. By 30 October, student will write a 5-sentence paragraph using capital letters and full stops in 8 out of 10 sentences.' class="w-full text-xs rounded-lg border-slate-300 border p-2 focus:ring-2 focus:ring-brand-600 focus:outline-none"></textarea>
+                </div>
+
+                <!-- Section 5: Classroom Accommodations -->
+                <div class="border p-3 rounded-lg bg-slate-50 space-y-2">
+                    <span class="font-bold text-slate-700 uppercase tracking-wide">5. Support During Normal Lessons</span>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        <label class="flex items-center space-x-1.5"><input type="checkbox" name="accommodation" value="Seat near front" class="rounded border-slate-300"> <span>Seat near front</span></label>
+                        <label class="flex items-center space-x-1.5"><input type="checkbox" name="accommodation" value="Extra time" class="rounded border-slate-300"> <span>Extra time</span></label>
+                        <label class="flex items-center space-x-1.5"><input type="checkbox" name="accommodation" value="Shorter task" class="rounded border-slate-300"> <span>Shorter task</span></label>
+                        <label class="flex items-center space-x-1.5"><input type="checkbox" name="accommodation" value="Sentence starters" class="rounded border-slate-300"> <span>Sentence starters</span></label>
+                        <label class="flex items-center space-x-1.5"><input type="checkbox" name="accommodation" value="Word bank" class="rounded border-slate-300"> <span>Word bank</span></label>
+                        <label class="flex items-center space-x-1.5"><input type="checkbox" name="accommodation" value="Partner work" class="rounded border-slate-300"> <span>Partner work</span></label>
+                    </div>
+                </div>
+
+                <div class="flex justify-end space-x-2 pt-3 border-t">
+                    <button type="button" onclick="closeModal('interventionModal')" class="px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-100 rounded-lg">Cancel</button>
+                    <button type="submit" class="px-4 py-1.5 bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold rounded-lg">Create Plan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const GOOGLE_SHEET_URL = 'https://script.google.com/macros/s/AKfycbwZ7VWzygtaRFs9-IabQ358J83hWmkMoHhmwqMG2PcZ1eDKkpZ9-43xJ4nTeqm9faXFrw/exec';
+        const STORAGE_KEY = 'AL_ROWAD_ENGLISH_APP_DATA_V1';
+
+        let appState = {
+            header: {
+                teacher: '',
+                grade: '',
+                week: '',
+                date: new Date().toISOString().split('T')[0],
+                subject: '',
+                googleSheetUrl: GOOGLE_SHEET_URL
+            },
+            students: [],
+            weeklyMarks: {},
+            parentLogs: [],
+            interventionPlans: []
+        };
+
+        window.addEventListener('DOMContentLoaded', () => {
+            loadFromLocalStorage();
+            populateHeaderUI();
+            renderRosterTable();
+            renderParentLogTable();
+            renderInterventionList();
+            populateStudentDropdowns();
+            updateStatsCounters();
+        });
+
+        function populateHeaderUI() {
+            document.getElementById('headerTeacher').value = appState.header.teacher || '';
+            document.getElementById('headerGrade').value = appState.header.grade || '';
+            document.getElementById('headerWeek').value = appState.header.week || '';
+            document.getElementById('headerDate').value = appState.header.date || '';
+            document.getElementById('headerSubject').value = appState.header.subject || '';
+
+            const settingsTeacherInput = document.getElementById('settingsTeacherFullName');
+            if (settingsTeacherInput) {
+                settingsTeacherInput.value = appState.header.teacher || '';
+            }
+
+            // Print headers
+            document.getElementById('printTeacher').innerText = appState.header.teacher || '-';
+            document.getElementById('printGrade').innerText = appState.header.grade || '-';
+            document.getElementById('printSubject').innerText = appState.header.subject || '-';
+            document.getElementById('printWeek').innerText = appState.header.week || '-';
+            document.getElementById('printDate').innerText = appState.header.date || '-';
+        }
+
+        function saveHeaderInfo() {
+            appState.header.teacher = document.getElementById('headerTeacher').value;
+            appState.header.grade = document.getElementById('headerGrade').value;
+            appState.header.week = document.getElementById('headerWeek').value;
+            appState.header.date = document.getElementById('headerDate').value;
+            appState.header.subject = document.getElementById('headerSubject').value;
+            appState.header.googleSheetUrl = GOOGLE_SHEET_URL;
+
+            populateHeaderUI();
+            saveToLocalStorage();
+        }
+
+        function syncTeacherNameFromSettings(val) {
+            document.getElementById('headerTeacher').value = val;
+            saveHeaderInfo();
+        }
+
+        function saveHeaderInfo() {
+            appState.header.teacher = document.getElementById('headerTeacher').value;
+            appState.header.grade = document.getElementById('headerGrade').value;
+            appState.header.week = document.getElementById('headerWeek').value;
+            appState.header.date = document.getElementById('headerDate').value;
+            appState.header.subject = document.getElementById('headerSubject').value;
+            appState.header.googleSheetUrl = GOOGLE_SHEET_URL;
+
+            populateHeaderUI();
+            saveToLocalStorage();
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(el => {
+                el.classList.remove('border-brand-600', 'text-brand-700');
+                el.classList.add('border-transparent', 'text-slate-500');
+            });
+
+            document.getElementById(tabId).classList.remove('hidden');
+            const activeBtn = document.getElementById('btn-' + tabId);
+            if(activeBtn) {
+                activeBtn.classList.remove('border-transparent', 'text-slate-500');
+                activeBtn.classList.add('border-brand-600', 'text-brand-700');
+            }
+
+            if(tabId === 'individualTab') {
+                renderIndividualProfile();
+            }
+        }
+
+        function updateStatsCounters() {
+            document.getElementById('statTotalStudents').innerText = appState.students.length;
+            document.getElementById('statFlagged').innerText = appState.students.filter(s => s.flagged).length;
+            document.getElementById('statParentLogs').innerText = appState.parentLogs.length;
+            document.getElementById('statInterventions').innerText = appState.interventionPlans.length;
+        }
+
+        function renderRosterTable() {
+            const tbody = document.getElementById('rosterTbody');
+            tbody.innerHTML = '';
+
+            if (appState.students.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="15" class="text-center p-8 text-slate-400">No students in roster. Click <strong>"+ Add Student"</strong> or <strong>"Load Demo Data"</strong> to get started.</td></tr>`;
+                return;
+            }
+
+            appState.students.forEach((student, index) => {
+                const marks = appState.weeklyMarks[student.id] || {
+                    att: 'P', part: 'Active', beh: '✓', cw: '3', hw: '3', books: 'Y', quiz: '', midterm: '', project: '', reading: 'G', writing: 'G'
+                };
+
+                const tr = document.createElement('tr');
+                tr.className = student.flagged ? 'bg-amber-50/50 hover:bg-amber-100/50' : 'hover:bg-slate-50/80';
+                tr.innerHTML = `
+                    <td class="p-2 text-center font-bold text-slate-500">${index + 1}</td>
+                    <td class="p-2">
+                        <input type="text" value="${escapeHtml(student.name)}" onchange="updateStudentName('${student.id}', this.value)" class="w-full font-semibold text-slate-800 bg-transparent focus:bg-white border-b border-transparent focus:border-brand-600 focus:outline-none p-1">
+                    </td>
+                    <td class="p-2 text-center">
+                        <select onchange="updateMark('${student.id}', 'att', this.value)" class="text-xs rounded border border-slate-300 p-1 bg-white">
+                            <option value="P" ${marks.att==='P'?'selected':''}>P (Present)</option>
+                            <option value="A" ${marks.att==='A'?'selected':''}>A (Absent)</option>
+                            <option value="L" ${marks.att==='L'?'selected':''}>L (Late)</option>
+                            <option value="E" ${marks.att==='E'?'selected':''}>E (Excused)</option>
+                        </select>
+                    </td>
+                    <td class="p-2 text-center">
+                        <select onchange="updateMark('${student.id}', 'part', this.value)" class="text-xs rounded border border-slate-300 p-1 bg-white">
+                            <option value="Active" ${marks.part==='Active'?'selected':''}>Active</option>
+                            <option value="Sometimes" ${marks.part==='Sometimes'?'selected':''}>Sometimes</option>
+                            <option value="Needs Encouragement" ${marks.part==='Needs Encouragement'?'selected':''}>Needs Encouragement</option>
+                        </select>
+                    </td>
+                    <td class="p-2 text-center">
+                        <input type="text" value="${escapeHtml(marks.beh)}" onchange="updateMark('${student.id}', 'beh', this.value)" class="w-full text-center border rounded p-1 text-xs">
+                    </td>
+                    <td class="p-2 text-center">
+                        <select onchange="updateMark('${student.id}', 'cw', this.value)" class="text-xs rounded border border-slate-300 p-1 bg-white">
+                            <option value="3" ${marks.cw==='3'?'selected':''}>3 (Complete)</option>
+                            <option value="2" ${marks.cw==='2'?'selected':''}>2 (Partial)</option>
+                            <option value="1" ${marks.cw==='1'?'selected':''}>1 (Not done)</option>
+                        </select>
+                    </td>
+                    <td class="p-2 text-center">
+                        <select onchange="updateMark('${student.id}', 'hw', this.value)" class="text-xs rounded border border-slate-300 p-1 bg-white">
+                            <option value="3" ${marks.hw==='3'?'selected':''}>3 (Complete)</option>
+                            <option value="2" ${marks.hw==='2'?'selected':''}>2 (Partial)</option>
+                            <option value="1" ${marks.hw==='1'?'selected':''}>1 (Not done)</option>
+                        </select>
+                    </td>
+                    <td class="p-2 text-center">
+                        <select onchange="updateMark('${student.id}', 'books', this.value)" class="text-xs rounded border border-slate-300 p-1 bg-white">
+                            <option value="Y" ${marks.books==='Y'?'selected':''}>Y (Brought)</option>
+                            <option value="N" ${marks.books==='N'?'selected':''}>N (Missing)</option>
+                            <option value="R" ${marks.books==='R'?'selected':''}>R (Repeated)</option>
+                        </select>
+                    </td>
+                    <td class="p-2 text-center"><input type="text" value="${escapeHtml(marks.quiz)}" onchange="updateMark('${student.id}', 'quiz', this.value)" placeholder="e.g. 8/10" class="w-16 text-center border rounded p-1 text-xs"></td>
+                    <td class="p-2 text-center"><input type="text" value="${escapeHtml(marks.midterm)}" onchange="updateMark('${student.id}', 'midterm', this.value)" placeholder="e.g. 85%" class="w-16 text-center border rounded p-1 text-xs"></td>
+                    <td class="p-2 text-center"><input type="text" value="${escapeHtml(marks.project)}" onchange="updateMark('${student.id}', 'project', this.value)" placeholder="e.g. 9/10" class="w-16 text-center border rounded p-1 text-xs"></td>
+                    <td class="p-2 text-center">
+                        <select onchange="updateMark('${student.id}', 'reading', this.value)" class="text-xs rounded border border-slate-300 p-1 bg-white">
+                            <option value="E" ${marks.reading==='E'?'selected':''}>E (Excellent)</option>
+                            <option value="G" ${marks.reading==='G'?'selected':''}>G (Good)</option>
+                            <option value="D" ${marks.reading==='D'?'selected':''}>D (Developing)</option>
+                            <option value="N" ${marks.reading==='N'?'selected':''}>N (Support Needed)</option>
+                        </select>
+                    </td>
+                    <td class="p-2 text-center">
+                        <select onchange="updateMark('${student.id}', 'writing', this.value)" class="text-xs rounded border border-slate-300 p-1 bg-white">
+                            <option value="E" ${marks.writing==='E'?'selected':''}>E (Excellent)</option>
+                            <option value="G" ${marks.writing==='G'?'selected':''}>G (Good)</option>
+                            <option value="D" ${marks.writing==='D'?'selected':''}>D (Developing)</option>
+                            <option value="N" ${marks.writing==='N'?'selected':''}>N (Support Needed)</option>
+                        </select>
+                    </td>
+                    <td class="p-2 text-center no-print">
+                        <input type="checkbox" ${student.flagged ? 'checked' : ''} onchange="toggleStudentFlag('${student.id}', this.checked)" class="w-4 h-4 text-amber-600 border-slate-300 rounded focus:ring-amber-500">
+                    </td>
+                    <td class="p-2 text-center no-print">
+                        <div class="flex items-center justify-center space-x-1">
+                            <button onclick="printIndividualStudent('${student.id}')" title="Print Student Report" class="text-slate-500 hover:text-brand-600 transition p-1">
+                                <i class="fa-solid fa-print text-sm"></i>
+                            </button>
+                            <button onclick="removeStudent('${student.id}')" title="Delete Student" class="text-slate-400 hover:text-red-600 transition p-1">
+                                <i class="fa-solid fa-trash-can text-sm"></i>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function updateStudentName(id, newName) {
+            const student = appState.students.find(s => s.id === id);
+            if(student) {
+                student.name = newName;
+                populateStudentDropdowns();
+                saveToLocalStorage();
+            }
+        }
+
+        function updateMark(studentId, field, value) {
+            if (!appState.weeklyMarks[studentId]) {
+                appState.weeklyMarks[studentId] = {};
+            }
+            appState.weeklyMarks[studentId][field] = value;
+            saveToLocalStorage();
+        }
+
+        function toggleStudentFlag(id, isFlagged) {
+            const student = appState.students.find(s => s.id === id);
+            if(student) {
+                student.flagged = isFlagged;
+                renderRosterTable();
+                updateStatsCounters();
+                saveToLocalStorage();
+            }
+        }
+
+        function removeStudent(id) {
+            appState.students = appState.students.filter(s => s.id !== id);
+            delete appState.weeklyMarks[id];
+            renderRosterTable();
+            populateStudentDropdowns();
+            updateStatsCounters();
+            saveToLocalStorage();
+        }
+
+        function openAddStudentModal() {
+            document.getElementById('newStudentName').value = '';
+            document.getElementById('addStudentModal').classList.remove('hidden');
+        }
+
+        function saveNewStudent() {
+            const nameInput = document.getElementById('newStudentName').value.trim();
+            if(nameInput) {
+                const newId = Date.now().toString();
+                appState.students.push({ id: newId, name: nameInput, flagged: false });
+                appState.weeklyMarks[newId] = { att: 'P', part: 'Active', beh: '✓', cw: '3', hw: '3', books: 'Y', quiz: '', midterm: '', project: '', reading: 'G', writing: 'G' };
+                renderRosterTable();
+                populateStudentDropdowns();
+                updateStatsCounters();
+                saveToLocalStorage();
+                closeModal('addStudentModal');
+            }
+        }
+
+        function renderParentLogTable() {
+            const tbody = document.getElementById('parentLogTbody');
+            tbody.innerHTML = '';
+
+            if(appState.parentLogs.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" class="text-center p-6 text-slate-400">No parent communication records yet. Click "Log New Contact" to add.</td></tr>`;
+                return;
+            }
+
+            appState.parentLogs.forEach((log) => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-50';
+                tr.innerHTML = `
+                    <td class="p-3 font-semibold text-slate-700">${escapeHtml(log.date)}</td>
+                    <td class="p-3 font-bold text-slate-800">${escapeHtml(log.studentName)}</td>
+                    <td class="p-3"><span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-100 text-blue-700">${escapeHtml(log.method)}</span></td>
+                    <td class="p-3 text-slate-700">${escapeHtml(log.reason)}</td>
+                    <td class="p-3 text-slate-600">${escapeHtml(log.summary)}</td>
+                    <td class="p-3 text-emerald-700 font-medium">${escapeHtml(log.agreedAction || '-')}</td>
+                    <td class="p-3 text-slate-600">${escapeHtml(log.followUpDate || '-')}</td>
+                    <td class="p-3 text-center no-print">
+                        <button onclick="deleteParentLog('${log.id}')" class="text-slate-400 hover:text-red-600 transition"><i class="fa-solid fa-trash-can"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function openParentLogModal() {
+            populateStudentDropdowns();
+            document.getElementById('parentLogDate').value = new Date().toISOString().split('T')[0];
+            document.getElementById('parentLogModal').classList.remove('hidden');
+        }
+
+        function saveParentLog(e) {
+            e.preventDefault();
+            const studentSelect = document.getElementById('parentLogStudentSelect');
+            const selectedOpt = studentSelect.options[studentSelect.selectedIndex];
+
+            const newLog = {
+                id: Date.now().toString(),
+                studentId: studentSelect.value,
+                studentName: selectedOpt ? selectedOpt.text : '',
+                date: document.getElementById('parentLogDate').value,
+                method: document.getElementById('parentLogMethod').value,
+                reason: document.getElementById('parentLogReason').value,
+                summary: document.getElementById('parentLogSummary').value,
+                agreedAction: document.getElementById('parentLogAgreed').value,
+                followUpDate: document.getElementById('parentLogFollowUpDate').value
+            };
+
+            appState.parentLogs.unshift(newLog);
+            renderParentLogTable();
+            updateStatsCounters();
+            saveToLocalStorage();
+            closeModal('parentLogModal');
+            document.getElementById('parentLogForm').reset();
+        }
+
+        function deleteParentLog(id) {
+            appState.parentLogs = appState.parentLogs.filter(p => p.id !== id);
+            renderParentLogTable();
+            updateStatsCounters();
+            saveToLocalStorage();
+        }
+
+        function renderInterventionList() {
+            const container = document.getElementById('interventionList');
+            container.innerHTML = '';
+
+            if(appState.interventionPlans.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-400 text-center py-4">No intervention plans created.</p>`;
+                return;
+            }
+
+            appState.interventionPlans.forEach(plan => {
+                const card = document.createElement('div');
+                card.className = 'p-3 rounded-lg border border-slate-200 hover:border-purple-400 cursor-pointer bg-slate-50 transition hover:bg-purple-50/40 space-y-1';
+                card.onclick = () => showInterventionDetail(plan.id);
+                card.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <h4 class="font-bold text-slate-800 text-xs">${escapeHtml(plan.studentName)}</h4>
+                        <span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-purple-100 text-purple-700">${escapeHtml(plan.status || 'Active')}</span>
+                    </div>
+                    <p class="text-[11px] text-slate-500 truncate">${escapeHtml(plan.weaknesses ? plan.weaknesses.join(', ') : 'Weakness area')}</p>
+                    <div class="flex justify-between text-[10px] text-slate-400 pt-1 border-t border-slate-100">
+                        <span>Review: ${escapeHtml(plan.reviewDate)}</span>
+                        <span class="font-semibold text-purple-600">View Plan →</span>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function openInterventionModal() {
+            populateStudentDropdowns();
+            document.getElementById('planStartDate').value = new Date().toISOString().split('T')[0];
+            const revDate = new Date();
+            revDate.setDate(revDate.getDate() + 30);
+            document.getElementById('planReviewDate').value = revDate.toISOString().split('T')[0];
+            document.getElementById('interventionModal').classList.remove('hidden');
+        }
+
+        function saveInterventionPlan(e) {
+            e.preventDefault();
+            const studentSelect = document.getElementById('planStudentSelect');
+            const selectedOpt = studentSelect.options[studentSelect.selectedIndex];
+
+            const weaknesses = Array.from(document.querySelectorAll('input[name="weakness"]:checked')).map(cb => cb.value);
+            const accommodations = Array.from(document.querySelectorAll('input[name="accommodation"]:checked')).map(cb => cb.value);
+
+            const newPlan = {
+                id: 'ip_' + Date.now(),
+                studentId: studentSelect.value,
+                studentName: selectedOpt ? selectedOpt.text : '',
+                supportStaff: document.getElementById('planSupportStaff').value,
+                startDate: document.getElementById('planStartDate').value,
+                reviewDate: document.getElementById('planReviewDate').value,
+                weaknesses: weaknesses,
+                problemDesc: document.getElementById('planProblemDesc').value,
+                goalText: document.getElementById('planGoalText').value,
+                accommodations: accommodations,
+                tracking: [],
+                status: 'Active'
+            };
+
+            appState.interventionPlans.unshift(newPlan);
+            renderInterventionList();
+            showInterventionDetail(newPlan.id);
+            updateStatsCounters();
+            saveToLocalStorage();
+            closeModal('interventionModal');
+
+            // Auto sync to Google Sheets if Web App URL is provided
+            if (appState.header.googleSheetUrl) {
+                syncToGoogleSheets(true);
+            }
+        }
+
+        async function syncToGoogleSheets(silent = false) {
+            const url = GOOGLE_SHEET_URL;
+            const msgEl = document.getElementById('syncStatusMsg');
+
+            if (msgEl) {
+                msgEl.classList.remove('hidden', 'text-red-600', 'text-emerald-600');
+                msgEl.classList.add('text-slate-600');
+                msgEl.innerText = "Syncing with Google Sheets...";
+            }
+
+            try {
+                // Send JSON payload to Google Apps Script doPost endpoint
+                await fetch(url, {
+                    method: 'POST',
+                    mode: 'no-cors', // standard mode for Google Apps Script Web App redirects
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(appState)
+                });
+
+                if (msgEl) {
+                    msgEl.classList.add('text-emerald-600');
+                    msgEl.innerText = "✓ Successfully dispatched data sync to Google Sheet!";
+                }
+                if (!silent) {
+                    const badge = document.getElementById('saveBadge');
+                    if (badge) {
+                        badge.innerHTML = '<i class="fa-solid fa-check mr-1.5 text-emerald-400"></i> Google Sheet Synced';
+                        setTimeout(() => {
+                            badge.innerHTML = '<i class="fa-solid fa-cloud-arrow-up mr-1.5 text-emerald-400"></i> Auto-Saved';
+                        }, 3000);
+                    }
+                }
+            } catch (err) {
+                console.error("Google Sheets Sync Error:", err);
+                if (msgEl) {
+                    msgEl.classList.add('text-red-600');
+                    msgEl.innerText = "❌ Sync error: Unable to connect to Google Sheet Web App URL.";
+                }
+            }
+        }
+
+        function openCodeGsModal() {
+            document.getElementById('codeGsModal').classList.remove('hidden');
+        }
+
+        function copyCodeGsText() {
+            const codeText = document.getElementById('codeGsSnippet').innerText;
+            const textarea = document.createElement('textarea');
+            textarea.value = codeText;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+            alert("Code.gs script copied to clipboard!");
+        }
+
+        function seedSampleData() {
+            appState.header = {
+                teacher: 'Mr. Ahmad Hassan',
+                grade: 'Grade 5 / Class A',
+                week: 'Week 4',
+                date: new Date().toISOString().split('T')[0],
+                subject: 'English Language',
+                googleSheetUrl: GOOGLE_SHEET_URL
+            };
+            appState.students = [
+                { id: '101', name: 'Zaid Al-Harbi', flagged: false },
+                { id: '102', name: 'Tariq Al-Ghamdi', flagged: true },
+                { id: '103', name: 'Sultan Al-Qahtani', flagged: false },
+                { id: '104', name: 'Majed Al-Mutairi', flagged: true },
+                { id: '105', name: 'Hamza Al-Shehri', flagged: false }
+            ];
+            appState.weeklyMarks = {
+                '101': { att: 'P', part: 'Active', beh: '✓', cw: '3', hw: '3', books: 'Y', quiz: '9/10', midterm: '92%', project: '10/10', reading: 'E', writing: 'E' },
+                '102': { att: 'L', part: 'Needs Encouragement', beh: 'Talking in class', cw: '1', hw: '1', books: 'N', quiz: '4/10', midterm: '55%', project: '5/10', reading: 'N', writing: 'N' },
+                '103': { att: 'P', part: 'Active', beh: '✓', cw: '3', hw: '3', books: 'Y', quiz: '8/10', midterm: '85%', project: '8/10', reading: 'G', writing: 'G' },
+                '104': { att: 'P', part: 'Sometimes', beh: 'Inattentive', cw: '2', hw: '1', books: 'R', quiz: '6/10', midterm: '68%', project: '7/10', reading: 'D', writing: 'D' },
+                '105': { att: 'P', part: 'Active', beh: '✓', cw: '3', hw: '2', books: 'Y', quiz: '7/10', midterm: '78%', project: '8/10', reading: 'G', writing: 'G' }
+            };
+            populateHeaderUI();
+            renderRosterTable();
+            populateStudentDropdowns();
+            updateStatsCounters();
+            saveToLocalStorage();
+        }
+
+        function confirmResetData() {
+            if (window.confirm("Are you sure you want to clear all data? This action cannot be undone unless you have a JSON backup.")) {
+                localStorage.removeItem(STORAGE_KEY);
+                location.reload();
+            }
+        }
+
+        function saveToLocalStorage() {
+            try {
+                appState.header.googleSheetUrl = GOOGLE_SHEET_URL;
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+            } catch (e) {
+                console.error("Error saving to LocalStorage", e);
+            }
+        }
+
+        function loadFromLocalStorage() {
+            try {
+                const data = localStorage.getItem(STORAGE_KEY);
+                if (data) {
+                    appState = Object.assign(appState, JSON.parse(data));
+                }
+                appState.header.googleSheetUrl = GOOGLE_SHEET_URL;
+            } catch (e) {
+                console.error("Error loading from LocalStorage", e);
+            }
+        }
+
+        function populateStudentDropdowns() {
+            const parentSelect = document.getElementById('parentLogStudentSelect');
+            const planSelect = document.getElementById('planStudentSelect');
+            const indSelect = document.getElementById('individualStudentSelect');
+
+            const optionsHtml = appState.students.length === 0
+                ? '<option value="">No students available</option>'
+                : appState.students.map(s => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('');
+
+            if (parentSelect) parentSelect.innerHTML = optionsHtml;
+            if (planSelect) planSelect.innerHTML = optionsHtml;
+            if (indSelect) {
+                const currentVal = indSelect.value;
+                indSelect.innerHTML = optionsHtml;
+                if (currentVal && appState.students.some(s => s.id === currentVal)) {
+                    indSelect.value = currentVal;
+                }
+            }
+        }
+
+        function filterRosterTable() {
+            const filter = document.getElementById('searchRoster').value.toLowerCase().trim();
+            const rows = document.querySelectorAll('#rosterTbody tr');
+            rows.forEach(row => {
+                const inputs = Array.from(row.querySelectorAll('input, select')).map(i => i.value).join(' ');
+                const fullText = (row.textContent + ' ' + inputs).toLowerCase();
+                row.style.display = fullText.includes(filter) ? '' : 'none';
+            });
+        }
+
+        function printIndividualStudent(studentId) {
+            const select = document.getElementById('individualStudentSelect');
+            if (select) {
+                select.value = studentId;
+            }
+            switchTab('individualTab');
+            setTimeout(() => {
+                window.print();
+            }, 150);
+        }
+
+        function showInterventionDetail(planId) {
+            const plan = appState.interventionPlans.find(p => p.id === planId);
+            const container = document.getElementById('planDetailContainer');
+            if (!plan || !container) return;
+
+            container.innerHTML = `
+                <div class="space-y-4">
+                    <div class="flex justify-between items-start border-b pb-3">
+                        <div>
+                            <span class="text-xs font-semibold text-purple-600 uppercase tracking-wider">Intervention Detail</span>
+                            <h3 class="text-lg font-bold text-slate-800">${escapeHtml(plan.studentName)}</h3>
+                            <p class="text-xs text-slate-500">Support Staff: ${escapeHtml(plan.supportStaff || 'N/A')}</p>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <span class="px-3 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">${escapeHtml(plan.status || 'Active')}</span>
+                            <button onclick="deleteInterventionPlan('${plan.id}')" class="text-xs text-red-600 hover:text-red-800 font-medium border border-red-200 bg-red-50 px-2.5 py-1 rounded-lg">Delete Plan</button>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4 text-xs">
+                        <div class="bg-slate-50 p-3 rounded-lg border">
+                            <span class="font-bold text-slate-700 block mb-1">Start Date:</span>
+                            <span class="text-slate-600">${escapeHtml(plan.startDate || '-')}</span>
+                        </div>
+                        <div class="bg-slate-50 p-3 rounded-lg border">
+                            <span class="font-bold text-slate-700 block mb-1">Review Date:</span>
+                            <span class="text-slate-600">${escapeHtml(plan.reviewDate || '-')}</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-50 p-3 rounded-lg border space-y-1 text-xs">
+                        <span class="font-bold text-slate-700 block">Identified Weaknesses:</span>
+                        <div class="flex flex-wrap gap-1">
+                            ${(plan.weaknesses || []).map(w => `<span class="bg-purple-50 text-purple-700 border border-purple-200 px-2 py-0.5 rounded text-[11px] font-medium">${escapeHtml(w)}</span>`).join('') || '<span class="text-slate-400">None specified</span>'}
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-50 p-3 rounded-lg border text-xs">
+                        <span class="font-bold text-slate-700 block mb-1">Observed Problem:</span>
+                        <p class="text-slate-600">${escapeHtml(plan.problemDesc || 'N/A')}</p>
+                    </div>
+
+                    <div class="bg-slate-50 p-3 rounded-lg border text-xs">
+                        <span class="font-bold text-slate-700 block mb-1">Target Goal (SMART Statement):</span>
+                        <p class="text-slate-600 font-medium">${escapeHtml(plan.goalText || 'N/A')}</p>
+                    </div>
+
+                    <div class="bg-slate-50 p-3 rounded-lg border space-y-1 text-xs">
+                        <span class="font-bold text-slate-700 block">Classroom Accommodations:</span>
+                        <div class="flex flex-wrap gap-1">
+                            ${(plan.accommodations || []).map(a => `<span class="bg-sky-50 text-sky-700 border border-sky-200 px-2 py-0.5 rounded text-[11px] font-medium">${escapeHtml(a)}</span>`).join('') || '<span class="text-slate-400">None specified</span>'}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function deleteInterventionPlan(planId) {
+            appState.interventionPlans = appState.interventionPlans.filter(p => p.id !== planId);
+            renderInterventionList();
+            document.getElementById('planDetailContainer').innerHTML = `
+                <div class="text-center py-12 text-slate-400">
+                    <i class="fa-solid fa-clipboard-list text-4xl mb-3"></i>
+                    <p class="text-sm">Select an intervention plan from the left list or create a new one to view details.</p>
+                </div>`;
+            updateStatsCounters();
+            saveToLocalStorage();
+        }
+
+        function renderIndividualProfile() {
+            const select = document.getElementById('individualStudentSelect');
+            const container = document.getElementById('studentProfileContent');
+            if (!select || !container) return;
+
+            const studentId = select.value;
+            const student = appState.students.find(s => s.id === studentId);
+
+            if (!student) {
+                container.innerHTML = `<div class="text-center py-12 text-slate-400"><p class="text-sm">Please select a student from the dropdown above to view their complete profile report.</p></div>`;
+                return;
+            }
+
+            const marks = appState.weeklyMarks[student.id] || {};
+            const parentLogs = appState.parentLogs.filter(p => p.studentId === student.id || p.studentName === student.name);
+            const plans = appState.interventionPlans.filter(p => p.studentId === student.id || p.studentName === student.name);
+
+            container.innerHTML = `
+                <!-- Print Header -->
+                <div class="text-center border-b pb-4 mb-4">
+                    <h2 class="text-xl font-bold uppercase tracking-wide text-slate-900">Al-Rowad International Schools</h2>
+                    <h3 class="text-sm font-semibold text-slate-700">English Department — Student Performance & Progress Report</h3>
+                </div>
+
+                <div class="flex flex-wrap justify-between items-center border-b pb-4 gap-4">
+                    <div>
+                        <span class="text-xs font-semibold text-brand-600 uppercase tracking-wider">Student Profile</span>
+                        <h2 class="text-2xl font-bold text-slate-800">${escapeHtml(student.name)}</h2>
+                        <p class="text-xs text-slate-500">${escapeHtml(appState.header.grade || 'Grade / Class')} • Teacher: ${escapeHtml(appState.header.teacher || 'Not Set')}</p>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        ${student.flagged ? '<span class="px-3 py-1 bg-amber-100 text-amber-800 rounded-full font-semibold text-xs border border-amber-300"><i class="fa-solid fa-flag mr-1"></i> Flagged for Attention</span>' : '<span class="px-3 py-1 bg-emerald-100 text-emerald-800 rounded-full font-semibold text-xs border border-emerald-300"><i class="fa-solid fa-circle-check mr-1"></i> Normal Progress</span>'}
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
+                        <h3 class="font-bold text-xs uppercase tracking-wide text-slate-700 border-b pb-2">Academic & Weekly Indicators</h3>
+                        <div class="grid grid-cols-2 gap-3 text-xs">
+                            <div><span class="text-slate-500 block">Attendance:</span> <span class="font-semibold text-slate-800">${escapeHtml(marks.att || 'P')}</span></div>
+                            <div><span class="text-slate-500 block">Participation:</span> <span class="font-semibold text-slate-800">${escapeHtml(marks.part || '-')}</span></div>
+                            <div><span class="text-slate-500 block">Class Work:</span> <span class="font-semibold text-slate-800">${escapeHtml(marks.cw || '-')}</span></div>
+                            <div><span class="text-slate-500 block">Homework:</span> <span class="font-semibold text-slate-800">${escapeHtml(marks.hw || '-')}</span></div>
+                            <div><span class="text-slate-500 block">Books/Materials:</span> <span class="font-semibold text-slate-800">${escapeHtml(marks.books || '-')}</span></div>
+                            <div><span class="text-slate-500 block">Behavior:</span> <span class="font-semibold text-slate-800">${escapeHtml(marks.beh || '-')}</span></div>
+                            <div><span class="text-slate-500 block">Reading Level:</span> <span class="font-semibold text-slate-800">${escapeHtml(marks.reading || '-')}</span></div>
+                            <div><span class="text-slate-500 block">Writing Level:</span> <span class="font-semibold text-slate-800">${escapeHtml(marks.writing || '-')}</span></div>
+                            <div><span class="text-slate-500 block">Quiz Grade:</span> <span class="font-semibold text-slate-800">${escapeHtml(marks.quiz || '-')}</span></div>
+                            <div><span class="text-slate-500 block">Midterm Grade:</span> <span class="font-semibold text-slate-800">${escapeHtml(marks.midterm || '-')}</span></div>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
+                        <h3 class="font-bold text-xs uppercase tracking-wide text-slate-700 border-b pb-2">Active Intervention Summary</h3>
+                        ${plans.length === 0 ? '<p class="text-xs text-slate-400">No active intervention plan recorded for this student.</p>' : plans.map(p => `
+                            <div class="space-y-1 text-xs bg-white p-3 rounded-lg border border-purple-200">
+                                <div class="flex justify-between font-bold text-purple-900">
+                                    <span>Plan Status: ${escapeHtml(p.status || 'Active')}</span>
+                                    <span>Review: ${escapeHtml(p.reviewDate)}</span>
+                                </div>
+                                <p class="text-slate-600"><strong>Goal:</strong> ${escapeHtml(p.goalText || 'N/A')}</p>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
+                    <h3 class="font-bold text-xs uppercase tracking-wide text-slate-700 border-b pb-2">Parent Contact Logs (${parentLogs.length})</h3>
+                    ${parentLogs.length === 0 ? '<p class="text-xs text-slate-400">No parent communication logged for this student yet.</p>' : `
+                        <div class="space-y-2">
+                            ${parentLogs.map(l => `
+                                <div class="bg-white p-3 rounded-lg border text-xs space-y-1">
+                                    <div class="flex justify-between text-slate-500 font-medium">
+                                        <span>${escapeHtml(l.date)} • ${escapeHtml(l.method)}</span>
+                                        <span class="text-emerald-700 font-semibold">Action: ${escapeHtml(l.agreedAction || 'None')}</span>
+                                    </div>
+                                    <p class="font-semibold text-slate-800">Reason: ${escapeHtml(l.reason)}</p>
+                                    <p class="text-slate-600">${escapeHtml(l.summary)}</p>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `}
+                </div>
+
+                <!-- FORMAL SIGNATURE SECTION FOR INDIVIDUAL REPORT PRINT -->
+                <div class="grid grid-cols-2 gap-8 pt-10 mt-6 border-t border-slate-300 print-break-inside-avoid">
+                    <div class="text-center space-y-8">
+                        <p class="font-bold text-xs uppercase tracking-wider text-slate-700">Teacher's Signature</p>
+                        <div class="border-b border-slate-400 w-56 mx-auto"></div>
+                        <p class="text-xs text-slate-600 font-medium">${escapeHtml(appState.header.teacher || 'Teacher Full Name')}</p>
+                    </div>
+                    <div class="text-center space-y-8">
+                        <p class="font-bold text-xs uppercase tracking-wider text-slate-700">Head of Department Signature</p>
+                        <div class="border-b border-slate-400 w-56 mx-auto"></div>
+                        <div>
+                            <p class="text-xs font-bold text-slate-800">Amanullah Khan</p>
+                            <p class="text-[11px] text-slate-500">Head of English Department</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center text-[10px] text-slate-400 pt-2 border-t">
+                    Report Prepared by Malak Rajeh &amp; Approved by Amanullah Khan (Head of English Department)
+                </div>
+            `;
+        }
+
+        function exportCSV(type) {
+            let csvContent = "data:text/csv;charset=utf-8,";
+            if (type === 'weekly') {
+                csvContent += "Student Name,Attendance,Participation,Behavior,Classwork,Homework,Books,Quiz,Midterm,Project,Reading,Writing,Flagged\n";
+                appState.students.forEach(s => {
+                    const m = appState.weeklyMarks[s.id] || {};
+                    const row = [
+                        `"${s.name.replace(/"/g, '""')}"`,
+                        `"${m.att || ''}"`,
+                        `"${m.part || ''}"`,
+                        `"${m.beh || ''}"`,
+                        `"${m.cw || ''}"`,
+                        `"${m.hw || ''}"`,
+                        `"${m.books || ''}"`,
+                        `"${m.quiz || ''}"`,
+                        `"${m.midterm || ''}"`,
+                        `"${m.project || ''}"`,
+                        `"${m.reading || ''}"`,
+                        `"${m.writing || ''}"`,
+                        `"${s.flagged ? 'Yes' : 'No'}"`
+                    ].join(",");
+                    csvContent += row + "\n";
+                });
+            } else if (type === 'parent') {
+                csvContent += "Date,Student Name,Method,Reason,Summary,Agreed Action,Follow Up Date\n";
+                appState.parentLogs.forEach(l => {
+                    const row = [
+                        `"${l.date || ''}"`,
+                        `"${(l.studentName || '').replace(/"/g, '""')}"`,
+                        `"${l.method || ''}"`,
+                        `"${(l.reason || '').replace(/"/g, '""')}"`,
+                        `"${(l.summary || '').replace(/"/g, '""')}"`,
+                        `"${(l.agreedAction || '').replace(/"/g, '""')}"`,
+                        `"${l.followUpDate || ''}"`
+                    ].join(",");
+                    csvContent += row + "\n";
+                });
+            }
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `Al_Rowad_${type}_export_${new Date().toISOString().split('T')[0]}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function exportDataJSON() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appState, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", `Al_Rowad_Backup_${new Date().toISOString().split('T')[0]}.json`);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+        }
+
+        function importDataJSON(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    if (importedData && typeof importedData === 'object') {
+                        appState = importedData;
+                        saveToLocalStorage();
+                        populateHeaderUI();
+                        renderRosterTable();
+                        renderParentLogTable();
+                        renderInterventionList();
+                        populateStudentDropdowns();
+                        updateStatsCounters();
+                        alert("Data backup successfully restored!");
+                    }
+                } catch (err) {
+                    alert("Error parsing JSON file. Please ensure it is a valid backup file.");
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+        }
+
+        function escapeHtml(str) {
+            if(!str) return '';
+            return String(str)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+    </script>
+</body>
+</html>
