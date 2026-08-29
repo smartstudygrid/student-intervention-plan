@@ -1229,8 +1229,6 @@
                 return `<span class="text-slate-600">${val || '-'}</span>`;
             };
 
-            const initials = student.name.trim().split(/\s+/).map(w => w[0]).slice(0,2).join('').toUpperCase();
-
             container.innerHTML = `
                 <!-- WATERMARK (print only) -->
                 <div class="report-watermark" style="position:absolute; inset:0; align-items:center; justify-content:center; pointer-events:none; z-index:0; overflow:hidden;">
@@ -1260,7 +1258,6 @@
                 <!-- STUDENT METADATA CARD -->
                 <div class="relative overflow-hidden text-white p-5 rounded-xl shadow-sm flex flex-wrap justify-between items-center gap-4 mt-6" style="z-index:1; background:linear-gradient(120deg,#0c4a6e 0%,#0f172a 100%); border:1px solid #0c4a6e; border-left:5px solid #f59e0b;">
                     <div class="flex items-center gap-4">
-                        <div class="flex items-center justify-center rounded-full font-extrabold text-lg flex-shrink-0" style="width:52px; height:52px; background:#fbbf24; color:#0c4a6e;">${escapeHtml(initials)}</div>
                         <div class="space-y-1">
                             <div class="flex items-center space-x-2">
                                 <h2 class="text-2xl font-bold tracking-tight">${escapeHtml(student.name)}</h2>
