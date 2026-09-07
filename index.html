@@ -256,7 +256,7 @@
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Grade / Class</label>
-                        <input type="text" id="headerGrade" oninput="saveHeaderInfo()" placeholder="e.g. Grade 5 / A" class="w-full text-sm rounded-lg border-slate-300 border p-2 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                        <input type="text" id="headerGrade" oninput="saveHeaderInfo()" placeholder="e.g. Grade 10C IG" class="w-full text-sm rounded-lg border-slate-300 border p-2 focus:ring-2 focus:ring-brand-600 focus:outline-none">
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Week No. &amp; Date</label>
@@ -281,7 +281,7 @@
                         </span>
                     </div>
                     <div class="flex items-center space-x-2">
-                        <input type="text" id="searchRoster" onkeyup="filterRosterTable()" placeholder="Search flagged student..." class="text-xs rounded-lg border-slate-300 border p-2 w-48 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                        <input type="text" id="searchRoster" onkeyup="filterRosterTable()" placeholder="Search student name or ID..." class="text-xs rounded-lg border-slate-300 border p-2 w-52 focus:ring-2 focus:ring-brand-600 focus:outline-none">
                         <button onclick="window.print()" class="px-3 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold rounded-lg transition flex items-center">
                             <i class="fa-solid fa-print mr-1.5"></i> Print Grid
                         </button>
@@ -314,7 +314,7 @@
                         <thead class="bg-slate-800 text-slate-200 uppercase font-semibold">
                             <tr>
                                 <th class="p-3 text-center w-10">#</th>
-                                <th class="p-3 min-w-[150px]">Student Name</th>
+                                <th class="p-3 min-w-[160px]">Student Details</th>
                                 <th class="p-3 text-center min-w-[90px]">Att.</th>
                                 <th class="p-3 text-center min-w-[120px]">Particip.</th>
                                 <th class="p-3 text-center min-w-[100px]">Behav.</th>
@@ -420,7 +420,7 @@
             <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex flex-wrap items-center justify-between gap-4 no-print">
                 <div class="flex items-center space-x-3 w-full sm:w-auto">
                     <label class="text-xs font-bold text-slate-600 uppercase">Select Student Profile:</label>
-                    <select id="individualStudentSelect" onchange="renderIndividualProfile()" class="text-sm rounded-lg border-slate-300 border p-2 focus:ring-2 focus:ring-brand-600 focus:outline-none min-w-[220px]">
+                    <select id="individualStudentSelect" onchange="renderIndividualProfile()" class="text-sm rounded-lg border-slate-300 border p-2 focus:ring-2 focus:ring-brand-600 focus:outline-none min-w-[240px]">
                         <!-- Dynamic options -->
                     </select>
                 </div>
@@ -492,14 +492,14 @@
                 <div class="pt-2 space-y-2">
                     <div class="flex justify-between items-center">
                         <h3 class="text-xs font-bold uppercase tracking-wider text-slate-700">All Flagged Students Across Department</h3>
-                        <input type="text" id="adminFilterInput" onkeyup="filterAdminTable()" placeholder="Filter by student or teacher..." class="text-xs rounded-lg border-slate-300 border p-2 w-64">
+                        <input type="text" id="adminFilterInput" onkeyup="filterAdminTable()" placeholder="Filter by student, ID, or teacher..." class="text-xs rounded-lg border-slate-300 border p-2 w-64">
                     </div>
                     <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                         <div class="overflow-x-auto custom-scrollbar">
                             <table class="w-full text-xs text-left text-slate-600" id="adminTable">
                                 <thead class="bg-slate-800 text-slate-200 uppercase font-semibold">
                                     <tr>
-                                        <th class="p-3">Student Name</th>
+                                        <th class="p-3">Student Details</th>
                                         <th class="p-3">Assigned Teacher</th>
                                         <th class="p-3">Grade / Class</th>
                                         <th class="p-3 text-center">Reading</th>
@@ -612,7 +612,7 @@
         </div>
     </footer>
 
-    <!-- MODAL: ADD STUDENT -->
+    <!-- MODAL: ADD STUDENT (WITH STUDENT ID, GRADE, SECTION) -->
     <div id="addStudentModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center hidden no-print p-4">
         <div class="bg-white rounded-xl shadow-xl border border-slate-200 max-w-md w-full p-6 space-y-4">
             <div class="flex justify-between items-center border-b pb-3">
@@ -620,27 +620,35 @@
                 <button onclick="closeModal('addStudentModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <form id="addStudentForm" onsubmit="handleSaveStudent(event)" class="space-y-3 text-xs">
-                <div>
-                    <label class="block font-semibold text-slate-600 mb-1">Student Full Name <span class="text-rose-500">*</span></label>
-                    <input type="text" id="newStudentName" required placeholder="e.g. Tariq Al-Ghamdi" class="w-full text-xs rounded-lg border-slate-300 border p-2 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                <div class="grid grid-cols-3 gap-3">
+                    <div class="col-span-1">
+                        <label class="block font-semibold text-slate-600 mb-1">Student ID <span class="text-rose-500">*</span></label>
+                        <input type="text" id="newStudentId" required placeholder="S150774" class="w-full text-xs rounded-lg border-slate-300 border p-2 focus:ring-2 focus:ring-brand-600 focus:outline-none font-mono uppercase tracking-wider font-semibold text-brand-800">
+                    </div>
+                    <div class="col-span-2">
+                        <label class="block font-semibold text-slate-600 mb-1">Student Full Name <span class="text-rose-500">*</span></label>
+                        <input type="text" id="newStudentName" required placeholder="e.g. Tariq Al-Ghamdi" class="w-full text-xs rounded-lg border-slate-300 border p-2 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                    </div>
                 </div>
+
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block font-semibold text-slate-600 mb-1">Grade / Class <span class="text-rose-500">*</span></label>
-                        <input type="text" id="newStudentGrade" required placeholder="e.g. Grade 5" class="w-full text-xs rounded-lg border-slate-300 border p-2 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                        <input type="text" id="newStudentGrade" required placeholder="e.g. Grade 10C IG" class="w-full text-xs rounded-lg border-slate-300 border p-2 focus:ring-2 focus:ring-brand-600 focus:outline-none">
                     </div>
                     <div>
                         <label class="block font-semibold text-slate-600 mb-1">Section / Stream <span class="text-rose-500">*</span></label>
                         <input type="text" id="newStudentSection" required placeholder="e.g. 5-A or Section B" class="w-full text-xs rounded-lg border-slate-300 border p-2 focus:ring-2 focus:ring-brand-600 focus:outline-none">
                     </div>
                 </div>
+
                 <div class="p-3 bg-amber-50 border border-amber-200 rounded-lg text-amber-900 text-[11px] leading-relaxed">
                     <i class="fa-solid fa-info-circle mr-1 text-amber-600"></i>
                     <strong>Important:</strong> Only add students who require differentiated support, homework monitoring, reading/writing remediation, or behavioral interventions.
                 </div>
                 <div class="flex justify-end space-x-2 pt-3 border-t">
                     <button type="button" onclick="closeModal('addStudentModal')" class="px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-100 rounded-lg">Cancel</button>
-                    <button type="submit" class="px-4 py-1.5 bg-brand-700 hover:bg-brand-800 text-white text-xs font-semibold rounded-lg">Add Student</button>
+                    <button type="submit" class="px-4 py-1.5 bg-brand-700 hover:bg-brand-800 text-white text-xs font-semibold rounded-lg shadow-sm">Add Student</button>
                 </div>
             </form>
         </div>
@@ -1178,11 +1186,11 @@
                 flaggedStudents: appState.students.filter(s => s.flagged).map(s => ({
                     ...s,
                     teacher: currentUser ? currentUser.name : 'Teacher',
-                    grade: appState.header.grade || 'Grade 5',
+                    grade: appState.header.grade || 'Grade 10C IG',
                     marks: appState.weeklyMarks[s.id] || {}
                 })),
                 teachersSummary: [
-                    { teacher: currentUser ? currentUser.name : 'Amanullah Khan', grade: appState.header.grade || 'Grade 5', flaggedCount: appState.students.filter(s => s.flagged).length, plansCount: appState.interventionPlans.length, logsCount: appState.parentLogs.length, lastSynced: 'Just now' }
+                    { teacher: currentUser ? currentUser.name : 'Amanullah Khan', grade: appState.header.grade || 'Grade 10C IG', flaggedCount: appState.students.filter(s => s.flagged).length, plansCount: appState.interventionPlans.length, logsCount: appState.parentLogs.length, lastSynced: 'Just now' }
                 ]
             });
         }
@@ -1223,9 +1231,12 @@
                 const tr = document.createElement('tr');
                 tr.className = 'hover:bg-slate-50';
                 tr.innerHTML = `
-                    <td class="p-3 font-bold text-slate-800">${escapeHtml(st.name)}</td>
+                    <td class="p-3">
+                        <div class="font-bold text-slate-800">${escapeHtml(st.name)}</div>
+                        <span class="font-mono text-[10px] text-brand-700 font-semibold">${escapeHtml(st.studentId || ('S' + st.id.slice(-6)))}</span>
+                    </td>
                     <td class="p-3 text-slate-700"><span class="px-2 py-0.5 rounded text-[11px] bg-slate-100 border font-medium">${escapeHtml(st.teacher || 'N/A')}</span></td>
-                    <td class="p-3 text-slate-600">${escapeHtml(st.grade || '-')}</td>
+                    <td class="p-3 text-slate-600">${escapeHtml(st.grade || '-')} ${st.section ? '(' + escapeHtml(st.section) + ')' : ''}</td>
                     <td class="p-3 text-center">${escapeHtml(m.reading || 'N')}</td>
                     <td class="p-3 text-center">${escapeHtml(m.writing || 'N')}</td>
                     <td class="p-3 text-center">${escapeHtml(m.beh || 'Off-Task')}</td>
@@ -1314,6 +1325,8 @@
                     att: 'P', part: 'Active', beh: 'Excellent', cw: '3', hw: '3', books: 'Y', quiz: '', midterm: '', project: '', reading: 'G', writing: 'G'
                 };
 
+                const studentCode = student.studentId || ('S' + student.id.slice(-6));
+
                 const tr = document.createElement('tr');
                 tr.className = student.flagged ? 'bg-amber-50/60 hover:bg-amber-100/60' : 'hover:bg-slate-50/80';
                 tr.innerHTML = `
@@ -1321,8 +1334,10 @@
                     <td class="p-2">
                         <div class="flex flex-col">
                             <input type="text" value="${escapeHtml(student.name)}" onchange="updateStudentName('${student.id}', this.value)" class="w-full font-semibold text-slate-800 bg-transparent focus:bg-white border-b border-transparent focus:border-brand-600 focus:outline-none p-0.5">
-                            <span class="text-[10px] text-slate-400 font-medium px-0.5">
-                                ${escapeHtml(student.grade || appState.header.grade || 'Grade 5')} &bull; ${escapeHtml(student.section || 'General')}
+                            <span class="text-[10px] text-slate-500 font-medium px-0.5 flex items-center gap-1.5">
+                                <span class="font-mono text-brand-700 font-bold bg-brand-50 px-1 py-0.2 rounded border border-brand-200/60">${escapeHtml(studentCode)}</span>
+                                <span>&bull;</span>
+                                <span>${escapeHtml(student.grade || appState.header.grade || 'Grade 10')} ${student.section ? '(' + escapeHtml(student.section) + ')' : ''}</span>
                             </span>
                         </div>
                     </td>
@@ -1451,6 +1466,7 @@
         }
 
         function openAddStudentModal() {
+            document.getElementById('newStudentId').value = '';
             document.getElementById('newStudentName').value = '';
             document.getElementById('newStudentGrade').value = appState.header.grade || '';
             document.getElementById('newStudentSection').value = '';
@@ -1459,15 +1475,18 @@
 
         function handleSaveStudent(e) {
             e.preventDefault();
+            const studentIdInput = document.getElementById('newStudentId').value.trim().toUpperCase();
             const nameInput = document.getElementById('newStudentName').value.trim();
-            const gradeInput = document.getElementById('newStudentGrade').value.trim() || appState.header.grade || 'Grade 5';
+            const gradeInput = document.getElementById('newStudentGrade').value.trim() || appState.header.grade || 'Grade 10C IG';
             const sectionInput = document.getElementById('newStudentSection').value.trim();
 
             if (nameInput) {
                 const newId = Date.now().toString();
-                // Flagged by default since app tracks students needing support
+                const assignedStudentId = studentIdInput || ('S' + newId.slice(-6));
+
                 appState.students.push({
                     id: newId,
+                    studentId: assignedStudentId,
                     name: nameInput,
                     grade: gradeInput,
                     section: sectionInput,
@@ -1787,10 +1806,11 @@
             const parentLogs = appState.parentLogs.filter(p => p.studentId === student.id || p.studentName === student.name);
             const plans = appState.interventionPlans.filter(p => p.studentId === student.id || p.studentName === student.name);
 
-            const displayGrade = student.grade || appState.header.grade || 'Grade 5';
+            const displayGrade = student.grade || appState.header.grade || 'Grade 10C IG';
             const displaySection = student.section ? ` / Section ${student.section}` : '';
+            const studentCode = student.studentId || ('S' + student.id.slice(-6));
 
-            // Helpers for visual badges & icons merged from second application
+            // Helpers for visual badges & icons
             const getAttendanceBadge = (val) => {
                 if (val === 'P') return '<span class="px-2 py-0.5 rounded text-xs font-semibold bg-emerald-100 text-emerald-800"><i class="fa-solid fa-circle-check mr-1 text-[10px]"></i> Present (P)</span>';
                 if (val === 'A') return '<span class="px-2 py-0.5 rounded text-xs font-semibold bg-red-100 text-red-800"><i class="fa-solid fa-circle-xmark mr-1 text-[10px]"></i> Absent (A)</span>';
@@ -1851,14 +1871,14 @@
                         </div>
                         <div class="text-right">
                             <span class="inline-block px-3 py-1 rounded-lg border text-[11px] font-bold uppercase tracking-wide" style="background:#0c4a6e; color:#fbbf24; border-color:#0c4a6e;">Student Intervention Report</span>
-                            <p class="text-[10px] text-slate-500 mt-1.5">File Ref: <span class="font-mono">${escapeHtml(student.id).slice(-6).toUpperCase()}</span></p>
+                            <p class="text-[10px] text-slate-500 mt-1.5">Student ID: <span class="font-mono font-bold text-slate-800">${escapeHtml(studentCode)}</span></p>
                             <p class="text-[10px] text-slate-500">Date Issued: ${new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
                         </div>
                     </div>
                     <div style="height:3px; background:linear-gradient(90deg,#0c4a6e 0%, #f59e0b 50%, #0c4a6e 100%); margin-top:-3px;"></div>
                 </div>
 
-                <!-- STUDENT METADATA CARD (FULL CLASS & SECTION DISPLAY) -->
+                <!-- STUDENT METADATA CARD (WITH STUDENT ID, FULL CLASS & SECTION DISPLAY) -->
                 <div class="pdf-avoid-break relative overflow-hidden text-white p-5 rounded-xl shadow-sm flex flex-wrap justify-between items-center gap-4 mt-6" style="z-index:1; background:linear-gradient(120deg,#0c4a6e 0%,#0f172a 100%); border:1px solid #0c4a6e; border-left:5px solid #f59e0b;">
                     <div class="space-y-1">
                         <div class="flex items-center space-x-2">
@@ -1866,6 +1886,7 @@
                             <span class="px-2.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded-full uppercase tracking-wider"><i class="fa-solid fa-flag mr-1"></i> Active Intervention</span>
                         </div>
                         <p class="text-xs text-slate-300">
+                            <strong class="text-gold-400">Student ID:</strong> <span class="text-white font-mono font-bold">${escapeHtml(studentCode)}</span> &nbsp;&bull;&nbsp;
                             <strong class="text-gold-400">Class &amp; Section:</strong> <span class="text-white font-semibold">${escapeHtml(displayGrade)}${escapeHtml(displaySection)}</span> &nbsp;&bull;&nbsp;
                             <strong class="text-gold-400">Teacher:</strong> ${escapeHtml(appState.header.teacher || 'Assigned Teacher')} &nbsp;&bull;&nbsp;
                             <strong class="text-gold-400">Subject:</strong> ${escapeHtml(appState.header.subject || 'English Language')}
@@ -2091,7 +2112,7 @@
             // Dynamically calculate max bar thickness so bars smoothly get thinner as more weeks are logged
             const computedMaxBarThickness = Math.max(3, Math.min(36, Math.floor(280 / (labels.length * 4))));
 
-            // RENDER GROUPED BAR CHART: EASIER FOR TEACHERS & PARENTS TO INTERPRET
+            // RENDER GROUPED BAR CHART
             currentStudentChart = new Chart(ctx, {
                 type: 'bar',
                 data: {
@@ -2138,7 +2159,7 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    devicePixelRatio: 2, // High-resolution rendering to prevent blurriness
+                    devicePixelRatio: 2,
                     scales: {
                         y: {
                             min: 0,
@@ -2238,6 +2259,7 @@
             const select = document.getElementById('individualStudentSelect');
             const student = appState.students.find(s => s.id === select.value);
             const studentName = student ? student.name.replace(/\s+/g, '_') : 'Student';
+            const studentIdCode = student && (student.studentId || student.id) ? (student.studentId || student.id).replace(/\s+/g, '_') : '';
             const element = document.getElementById('studentProfileContent');
             const btn = document.getElementById('btnExportPDF');
 
@@ -2245,11 +2267,11 @@
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1.5"></i> Generating Sharp PDF...';
 
             const opt = {
-                margin: [10, 10, 10, 10], // standard 10mm margins
-                filename: `Al_Rowad_Intervention_Report_${studentName}.pdf`,
+                margin: [10, 10, 10, 10],
+                filename: `Al_Rowad_Intervention_Report_${studentIdCode}_${studentName}.pdf`,
                 image: { type: 'jpeg', quality: 1.0 },
                 html2canvas: {
-                    scale: 3, // 3x scale produces high-res crisp text and charts without blurriness
+                    scale: 3,
                     useCORS: true,
                     logging: false,
                     letterRendering: true,
@@ -2257,7 +2279,6 @@
                     scrollX: 0
                 },
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-                // Guarantees sections/cards never split in half across page breaks
                 pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
             };
 
@@ -2276,10 +2297,11 @@
         function exportCSV(type) {
             let csvContent = "data:text/csv;charset=utf-8,";
             if (type === 'weekly') {
-                csvContent += "Student Name,Attendance,Participation,Behavior,Classwork,Homework,Books,Quiz,Midterm,Project,Reading,Writing,PriorityFlag\n";
+                csvContent += "Student ID,Student Name,Attendance,Participation,Behavior,Classwork,Homework,Books,Quiz,Midterm,Project,Reading,Writing,PriorityFlag\n";
                 appState.students.forEach(s => {
                     const m = appState.weeklyMarks[s.id] || {};
                     const row = [
+                        `"${(s.studentId || ('S' + s.id.slice(-6))).replace(/"/g, '""')}"`,
                         `"${s.name.replace(/"/g, '""')}"`,
                         `"${m.att || ''}"`,
                         `"${m.part || ''}"`,
@@ -2382,7 +2404,7 @@
             }
         }
 
-        // DEBOUNCED AUTO-SYNC (Triggers sync 2 seconds after user finishes editing)
+        // DEBOUNCED AUTO-SYNC
         let syncTimeout = null;
         function triggerDebouncedSync() {
             if (syncTimeout) clearTimeout(syncTimeout);
@@ -2419,7 +2441,10 @@
 
             const optionsHtml = appState.students.length === 0
                 ? '<option value="">No monitored students available</option>'
-                : appState.students.map(s => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('');
+                : appState.students.map(s => {
+                    const code = s.studentId || ('S' + s.id.slice(-6));
+                    return `<option value="${s.id}">${escapeHtml(s.name)} [${escapeHtml(code)}]</option>`;
+                }).join('');
 
             if (parentSelect) parentSelect.innerHTML = optionsHtml;
             if (planSelect) planSelect.innerHTML = optionsHtml;
