@@ -63,6 +63,21 @@
         .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* Crisp PDF and Print Page-Break Protection */
+        .pdf-avoid-break {
+            break-inside: avoid !important;
+            page-break-inside: avoid !important;
+        }
+        .pdf-page-break {
+            break-before: page !important;
+            page-break-before: always !important;
+        }
+        #studentProfileContent {
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            text-rendering: optimizeLegibility;
+        }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col">
@@ -101,18 +116,6 @@
                         <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-400">
                             <i class="fa-solid fa-lock"></i>
                         </div>
-                    </div>
-                </div>
-
-                <!-- Optional Custom Backend URL Accordion -->
-                <div class="pt-1">
-                    <button type="button" onclick="toggleBackendUrlInput()" class="text-[11px] text-brand-700 hover:text-brand-900 font-semibold flex items-center gap-1">
-                        <i class="fa-solid fa-gear text-[10px]"></i> <span id="backendUrlToggleText">Configure Google Sheet Backend URL</span>
-                    </button>
-                    <div id="backendUrlContainer" class="hidden mt-2 p-2.5 bg-slate-50 rounded-lg border border-slate-200 space-y-1">
-                        <label class="block text-[10px] font-semibold text-slate-600 uppercase">Google Apps Script Web App URL (/exec)</label>
-                        <input type="text" id="loginCustomSheetUrl" placeholder="https://script.google.com/macros/s/.../exec" onchange="onLoginUrlChanged(this.value)" class="w-full text-[11px] rounded border-slate-300 border p-1.5 font-mono">
-                        <p class="text-[9px] text-slate-400">Paste your deployed Web App URL here if connecting to a new spreadsheet.</p>
                     </div>
                 </div>
 
@@ -456,6 +459,30 @@
                     </button>
                 </div>
 
+                <!-- Admin Backend Web App Endpoint Configuration -->
+                <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2.5">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-2 text-slate-800">
+                            <i class="fa-solid fa-gears text-brand-700 text-sm"></i>
+                            <h3 class="font-bold text-xs uppercase tracking-wider">Google Apps Script Backend Endpoint (Admin Control)</h3>
+                        </div>
+                        <span class="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                            <i class="fa-solid fa-link mr-1"></i> Active Backend
+                        </span>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-2 pt-1">
+                        <div class="md:col-span-3">
+                            <input type="text" id="adminGoogleSheetUrl" placeholder="https://script.google.com/macros/s/.../exec" class="w-full text-xs rounded-lg border-slate-300 border p-2 focus:ring-2 focus:ring-amber-500 font-mono">
+                        </div>
+                        <div>
+                            <button type="button" onclick="updateGoogleSheetUrl(document.getElementById('adminGoogleSheetUrl').value)" class="w-full py-2 px-3 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-lg shadow-sm transition flex items-center justify-center gap-1.5">
+                                <i class="fa-solid fa-floppy-disk"></i> Update Endpoint
+                            </button>
+                        </div>
+                    </div>
+                    <p class="text-[10px] text-slate-500">Configure or redirect the deployed Google Apps Script Web App URL (<code class="font-mono">/exec</code>) for all teacher and department sync operations.</p>
+                </div>
+
                 <!-- Teacher Tab Summaries -->
                 <div class="space-y-2">
                     <h3 class="text-xs font-bold uppercase tracking-wider text-slate-700">Teacher Sheets &amp; Tab Status</h3>
@@ -751,6 +778,79 @@
         </div>
     </div>
 
+    <!-- MODAL: LOG PROGRESS CHECKPOINT -->
+    <div id="progressModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center hidden no-print p-4">
+        <div class="bg-white rounded-xl shadow-xl border border-slate-200 max-w-md w-full p-6 space-y-4">
+            <div class="flex justify-between items-center border-b pb-3">
+                <div class="flex items-center space-x-2">
+                    <div class="p-2 bg-emerald-50 text-emerald-700 rounded-lg">
+                        <i class="fa-solid fa-chart-simple"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-slate-800 text-sm">Log Weekly Progress Checkpoint</h3>
+                        <p class="text-[11px] text-slate-500">Record measurable performance data for the bar chart.</p>
+                    </div>
+                </div>
+                <button onclick="closeModal('progressModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <form id="progressCheckpointForm" onsubmit="saveProgressCheckpoint(event)" class="space-y-3 text-xs">
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-semibold text-slate-600 mb-1">Cycle / Label <span class="text-rose-500">*</span></label>
+                        <input type="text" id="checkpointWeek" required placeholder="e.g. Week 4" class="w-full text-xs rounded-lg border-slate-300 border p-2 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-600 mb-1">Checkpoint Date <span class="text-rose-500">*</span></label>
+                        <input type="date" id="checkpointDate" required class="w-full text-xs rounded-lg border-slate-300 border p-2 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                    </div>
+                </div>
+
+                <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
+                    <span class="font-bold text-slate-700 uppercase tracking-wider text-[10px] block">Performance Metrics (Score % from 0 to 100)</span>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block font-medium text-slate-600 text-[11px] mb-1">
+                                <i class="fa-solid fa-book-open text-brand-600 mr-1"></i> Reading Score (%)
+                            </label>
+                            <input type="number" id="checkpointReading" min="0" max="100" required placeholder="e.g. 65" class="w-full text-xs rounded border-slate-300 border p-1.5 focus:ring-2 focus:ring-brand-600">
+                        </div>
+                        <div>
+                            <label class="block font-medium text-slate-600 text-[11px] mb-1">
+                                <i class="fa-solid fa-pen-fancy text-purple-600 mr-1"></i> Writing Score (%)
+                            </label>
+                            <input type="number" id="checkpointWriting" min="0" max="100" required placeholder="e.g. 58" class="w-full text-xs rounded border-slate-300 border p-1.5 focus:ring-2 focus:ring-purple-600">
+                        </div>
+                        <div>
+                            <label class="block font-medium text-slate-600 text-[11px] mb-1">
+                                <i class="fa-solid fa-user-check text-emerald-600 mr-1"></i> Behavior Rating (%)
+                            </label>
+                            <input type="number" id="checkpointBehavior" min="0" max="100" required placeholder="e.g. 75" class="w-full text-xs rounded border-slate-300 border p-1.5 focus:ring-2 focus:ring-emerald-600">
+                        </div>
+                        <div>
+                            <label class="block font-medium text-slate-600 text-[11px] mb-1">
+                                <i class="fa-solid fa-list-check text-amber-600 mr-1"></i> Homework / Effort (%)
+                            </label>
+                            <input type="number" id="checkpointEffort" min="0" max="100" required placeholder="e.g. 70" class="w-full text-xs rounded border-slate-300 border p-1.5 focus:ring-2 focus:ring-amber-600">
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-slate-600 mb-1">Observational Notes (Optional)</label>
+                    <input type="text" id="checkpointNotes" placeholder="e.g. Notable improvement in decoding and submitting homework on time." class="w-full text-xs rounded-lg border-slate-300 border p-2 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                </div>
+
+                <div class="flex justify-end space-x-2 pt-2 border-t">
+                    <button type="button" onclick="closeModal('progressModal')" class="px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-100 rounded-lg">Cancel</button>
+                    <button type="submit" class="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg shadow-sm transition flex items-center">
+                        <i class="fa-solid fa-check mr-1.5"></i> Save Checkpoint
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- APPLICATION SCRIPT LOGIC -->
     <script>
         // BACKEND SCRIPT URL (Configured with the newly deployed Web App endpoint)
@@ -791,8 +891,8 @@
             document.querySelectorAll('.ais-logo').forEach(img => { img.src = AIS_LOGO; });
             const settingsInput = document.getElementById('settingsGoogleSheetUrl');
             if (settingsInput) settingsInput.value = GOOGLE_SHEET_URL;
-            const loginUrlInput = document.getElementById('loginCustomSheetUrl');
-            if (loginUrlInput) loginUrlInput.value = GOOGLE_SHEET_URL;
+            const adminInput = document.getElementById('adminGoogleSheetUrl');
+            if (adminInput) adminInput.value = GOOGLE_SHEET_URL;
 
             // Fetch Staff list for login dropdown
             fetchStaffList();
@@ -810,29 +910,6 @@
                 showAuthModal();
             }
         });
-
-        function toggleBackendUrlInput() {
-            const container = document.getElementById('backendUrlContainer');
-            const text = document.getElementById('backendUrlToggleText');
-            if (container.classList.contains('hidden')) {
-                container.classList.remove('hidden');
-                text.innerText = "Hide Backend URL Configuration";
-            } else {
-                container.classList.add('hidden');
-                text.innerText = "Configure Google Sheet Backend URL";
-            }
-        }
-
-        function onLoginUrlChanged(val) {
-            if (val && val.trim()) {
-                GOOGLE_SHEET_URL = val.trim();
-                localStorage.setItem('AL_ROWAD_SHEET_URL', GOOGLE_SHEET_URL);
-                appState.header.googleSheetUrl = GOOGLE_SHEET_URL;
-                const settingsInput = document.getElementById('settingsGoogleSheetUrl');
-                if (settingsInput) settingsInput.value = GOOGLE_SHEET_URL;
-                fetchStaffList();
-            }
-        }
 
         function showAuthModal() {
             document.getElementById('authModal').classList.remove('hidden');
@@ -1765,7 +1842,7 @@
                 </div>
 
                 <!-- FORMAL INSTITUTIONAL HEADER -->
-                <div class="relative" style="z-index:1;">
+                <div class="pdf-avoid-break relative" style="z-index:1;">
                     <div class="flex justify-between items-end pb-4" style="border-bottom:3px double #0c4a6e;">
                         <div class="flex items-center space-x-4">
                             <img src="${AIS_LOGO}" alt="Al-Rowad International Schools" style="height:64px; width:64px; object-fit:contain;">
@@ -1785,7 +1862,7 @@
                 </div>
 
                 <!-- STUDENT METADATA CARD (FULL CLASS & SECTION DISPLAY) -->
-                <div class="relative overflow-hidden text-white p-5 rounded-xl shadow-sm flex flex-wrap justify-between items-center gap-4 mt-6" style="z-index:1; background:linear-gradient(120deg,#0c4a6e 0%,#0f172a 100%); border:1px solid #0c4a6e; border-left:5px solid #f59e0b;">
+                <div class="pdf-avoid-break relative overflow-hidden text-white p-5 rounded-xl shadow-sm flex flex-wrap justify-between items-center gap-4 mt-6" style="z-index:1; background:linear-gradient(120deg,#0c4a6e 0%,#0f172a 100%); border:1px solid #0c4a6e; border-left:5px solid #f59e0b;">
                     <div class="space-y-1">
                         <div class="flex items-center space-x-2">
                             <h2 class="text-2xl font-bold tracking-tight">${escapeHtml(student.name)}</h2>
@@ -1803,14 +1880,14 @@
                     </div>
                 </div>
 
-                <!-- SECTION 1: LONGITUDINAL INTERVENTION TRACKING (CHART.JS) -->
-                <div class="space-y-3">
+                <!-- SECTION 1: LONGITUDINAL INTERVENTION TRACKING (BAR CHART) -->
+                <div class="pdf-avoid-break space-y-3">
                     <div class="flex justify-between items-center border-b-2 border-slate-200 pb-2">
                         <h3 class="text-xs font-bold uppercase tracking-wider text-slate-800 flex items-center gap-2">
                             <span class="inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-extrabold text-white flex-shrink-0" style="background:#0c4a6e;">1</span>
-                            <i class="fa-solid fa-chart-line text-brand-600"></i> Longitudinal Progress Trajectory (Weekly Progress)
+                            <i class="fa-solid fa-chart-simple text-brand-600"></i> Multi-Week Performance Checkpoints (Comparative Bar Chart)
                         </h3>
-                        <span class="text-[10px] text-slate-500 font-medium">Monitoring efficacy of support interventions</span>
+                        <span class="text-[10px] text-slate-500 font-medium">Tracking weekly performance level changes</span>
                     </div>
 
                     <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
@@ -1821,7 +1898,7 @@
                 </div>
 
                 <!-- SECTION 2: CURRENT SKILL & PERFORMANCE SNAPSHOT -->
-                <div class="space-y-3">
+                <div class="pdf-avoid-break space-y-3">
                     <h3 class="text-xs font-bold uppercase tracking-wider text-slate-800 flex items-center gap-2 border-b-2 border-slate-200 pb-2">
                         <span class="inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-extrabold text-white flex-shrink-0" style="background:#0c4a6e;">2</span>
                         <i class="fa-solid fa-table-list text-purple-600"></i> Current Intervention Indicators &amp; Competencies
@@ -1875,7 +1952,7 @@
                 </div>
 
                 <!-- SECTION 3: STRUCTURED INTERVENTION ACTION PLAN WITH OBSERVED IMPACT -->
-                <div class="space-y-3">
+                <div class="pdf-avoid-break space-y-3">
                     <h3 class="text-xs font-bold uppercase tracking-wider text-slate-800 flex items-center gap-2 border-b-2 border-slate-200 pb-2">
                         <span class="inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-extrabold text-white flex-shrink-0" style="background:#0c4a6e;">3</span>
                         <i class="fa-solid fa-bullseye text-purple-600"></i> Active SMART Intervention Plan
@@ -1922,7 +1999,7 @@
                 </div>
 
                 <!-- SECTION 4: PARENT COLLABORATION HISTORY -->
-                <div class="space-y-3">
+                <div class="pdf-avoid-break space-y-3">
                     <h3 class="text-xs font-bold uppercase tracking-wider text-slate-800 flex items-center gap-2 border-b-2 border-slate-200 pb-2">
                         <span class="inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-extrabold text-white flex-shrink-0" style="background:#0c4a6e;">4</span>
                         <i class="fa-solid fa-comments text-emerald-600"></i> Parent-Teacher Communication &amp; Home Commitments
@@ -1948,7 +2025,7 @@
                 </div>
 
                 <!-- SECTION 5: SIGN-OFF & PARENT-TEACHER CONFERENCE AUTHORIZATION -->
-                <div class="pt-6 mt-6 print-break-inside-avoid relative" style="z-index:1; border-top:3px double #0c4a6e;">
+                <div class="pdf-avoid-break pt-6 mt-6 relative" style="z-index:1; border-top:3px double #0c4a6e;">
                     <div class="grid grid-cols-3 gap-6 pt-2">
                         <div class="text-center space-y-6">
                             <p class="font-bold text-xs uppercase tracking-wider text-slate-800">English Teacher</p>
@@ -1977,7 +2054,7 @@
                     </div>
                 </div>
 
-                <div class="relative flex items-center justify-center gap-3 text-center text-[10px] text-slate-400 pt-4 mt-2 border-t border-slate-100" style="z-index:1;">
+                <div class="pdf-avoid-break relative flex items-center justify-center gap-3 text-center text-[10px] text-slate-400 pt-4 mt-2 border-t border-slate-100" style="z-index:1;">
                     <img src="${AIS_LOGO}" alt="" style="height:20px; width:20px; object-fit:contain; opacity:0.8;">
                     <span>Al-Rowad International Schools &bull; Confidential Student Intervention File &bull; Prepared for Parent-Teacher Conference</span>
                 </div>
@@ -2091,61 +2168,82 @@
             const behaviorData = history.map(h => h.behavior);
             const effortData = history.map(h => h.effort);
 
+            // Dynamically calculate max bar thickness so bars smoothly get thinner as more weeks are logged
+            const computedMaxBarThickness = Math.max(3, Math.min(36, Math.floor(280 / (labels.length * 4))));
+
+            // RENDER GROUPED BAR CHART: EASIER FOR TEACHERS & PARENTS TO INTERPRET
             currentStudentChart = new Chart(ctx, {
-                type: 'line',
+                type: 'bar',
                 data: {
                     labels: labels,
                     datasets: [
                         {
                             label: 'Reading Score',
                             data: readingData,
-                            borderColor: '#0284c7',
-                            backgroundColor: 'rgba(2, 132, 199, 0.1)',
-                            borderWidth: 2.5,
-                            tension: 0.3,
-                            fill: true
+                            backgroundColor: '#0284c7', // Brand 600
+                            borderRadius: 3,
+                            barPercentage: 0.85,
+                            categoryPercentage: 0.85,
+                            maxBarThickness: computedMaxBarThickness
                         },
                         {
                             label: 'Writing Score',
                             data: writingData,
-                            borderColor: '#7c3aed',
-                            backgroundColor: 'rgba(124, 58, 237, 0.1)',
-                            borderWidth: 2.5,
-                            tension: 0.3,
-                            fill: true
+                            backgroundColor: '#7c3aed', // Purple 600
+                            borderRadius: 3,
+                            barPercentage: 0.85,
+                            categoryPercentage: 0.85,
+                            maxBarThickness: computedMaxBarThickness
                         },
                         {
                             label: 'Behavior Rating',
                             data: behaviorData,
-                            borderColor: '#10b981',
-                            borderDash: [5, 5],
-                            borderWidth: 2,
-                            tension: 0.2
+                            backgroundColor: '#10b981', // Emerald 500
+                            borderRadius: 3,
+                            barPercentage: 0.85,
+                            categoryPercentage: 0.85,
+                            maxBarThickness: computedMaxBarThickness
                         },
                         {
                             label: 'Homework / Effort',
                             data: effortData,
-                            borderColor: '#f59e0b',
-                            borderDash: [3, 3],
-                            borderWidth: 2,
-                            tension: 0.2
+                            backgroundColor: '#f59e0b', // Amber 500
+                            borderRadius: 3,
+                            barPercentage: 0.85,
+                            categoryPercentage: 0.85,
+                            maxBarThickness: computedMaxBarThickness
                         }
                     ]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    devicePixelRatio: 2, // High-resolution rendering to prevent blurriness
                     scales: {
                         y: {
                             min: 0,
                             max: 100,
                             ticks: {
-                                callback: val => val + '%'
+                                callback: val => val + '%',
+                                font: { size: 10 }
                             },
                             title: {
                                 display: true,
                                 text: 'Performance Level (%)',
-                                font: { size: 10 }
+                                font: { size: 10, weight: 'bold' }
+                            },
+                            grid: {
+                                color: '#f1f5f9'
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                font: { size: labels.length > 8 ? 9 : 10, weight: 'bold' },
+                                maxRotation: labels.length > 5 ? 45 : 0,
+                                autoSkip: false
+                            },
+                            grid: {
+                                display: false
                             }
                         }
                     },
@@ -2154,7 +2252,8 @@
                             position: 'top',
                             labels: {
                                 boxWidth: 12,
-                                font: { size: 10 }
+                                font: { size: 10, weight: '600' },
+                                padding: 12
                             }
                         },
                         tooltip: {
@@ -2169,8 +2268,8 @@
 
         function openAddProgressPointModal() {
             const select = document.getElementById('individualStudentSelect');
-            if (!select.value) {
-                alert("Please select a student profile first.");
+            if (!select || !select.value) {
+                alert("Please select a student profile first from the dropdown.");
                 return;
             }
             const history = appState.studentHistory[select.value] || [];
@@ -2187,21 +2286,24 @@
         function saveProgressCheckpoint(e) {
             e.preventDefault();
             const select = document.getElementById('individualStudentSelect');
-            const studentId = select.value;
-            if (!studentId) return;
+            const studentId = select ? select.value : null;
+            if (!studentId) {
+                alert("Please select a valid student.");
+                return;
+            }
 
             if (!appState.studentHistory[studentId]) {
                 appState.studentHistory[studentId] = [];
             }
 
             const newPoint = {
-                week: document.getElementById('checkpointWeek').value,
-                date: document.getElementById('checkpointDate').value,
-                reading: Number(document.getElementById('checkpointReading').value),
-                writing: Number(document.getElementById('checkpointWriting').value),
-                behavior: Number(document.getElementById('checkpointBehavior').value),
-                effort: Number(document.getElementById('checkpointEffort').value),
-                notes: document.getElementById('checkpointNotes').value
+                week: document.getElementById('checkpointWeek').value.trim() || `Week ${appState.studentHistory[studentId].length + 1}`,
+                date: document.getElementById('checkpointDate').value || new Date().toISOString().split('T')[0],
+                reading: Math.min(100, Math.max(0, Number(document.getElementById('checkpointReading').value) || 0)),
+                writing: Math.min(100, Math.max(0, Number(document.getElementById('checkpointWriting').value) || 0)),
+                behavior: Math.min(100, Math.max(0, Number(document.getElementById('checkpointBehavior').value) || 0)),
+                effort: Math.min(100, Math.max(0, Number(document.getElementById('checkpointEffort').value) || 0)),
+                notes: document.getElementById('checkpointNotes').value.trim()
             };
 
             appState.studentHistory[studentId].push(newPoint);
@@ -2211,7 +2313,7 @@
             triggerDebouncedSync();
         }
 
-        // PDF REPORT EXPORT FUNCTION (html2pdf.js)
+        // HIGH-DPI & SHARP PDF EXPORT FUNCTION (html2pdf.js)
         function exportStudentProfilePDF() {
             const select = document.getElementById('individualStudentSelect');
             const student = appState.students.find(s => s.id === select.value);
@@ -2220,14 +2322,23 @@
             const btn = document.getElementById('btnExportPDF');
 
             btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1.5"></i> Generating PDF...';
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1.5"></i> Generating Sharp PDF...';
 
             const opt = {
-                margin: [8, 8, 8, 8],
+                margin: [10, 10, 10, 10], // standard 10mm margins
                 filename: `Al_Rowad_Intervention_Report_${studentName}.pdf`,
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, useCORS: true },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                image: { type: 'jpeg', quality: 1.0 },
+                html2canvas: {
+                    scale: 3, // 3x scale produces high-res crisp text and charts without blurriness
+                    useCORS: true,
+                    logging: false,
+                    letterRendering: true,
+                    scrollY: 0,
+                    scrollX: 0
+                },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                // Guarantees sections/cards never split in half across page breaks
+                pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
             };
 
             html2pdf().set(opt).from(element).save().then(() => {
@@ -2332,8 +2443,12 @@
             GOOGLE_SHEET_URL = newUrl.trim();
             localStorage.setItem('AL_ROWAD_SHEET_URL', GOOGLE_SHEET_URL);
             appState.header.googleSheetUrl = GOOGLE_SHEET_URL;
-            const loginInput = document.getElementById('loginCustomSheetUrl');
-            if (loginInput) loginInput.value = GOOGLE_SHEET_URL;
+            
+            const settingsInput = document.getElementById('settingsGoogleSheetUrl');
+            if (settingsInput) settingsInput.value = GOOGLE_SHEET_URL;
+            const adminInput = document.getElementById('adminGoogleSheetUrl');
+            if (adminInput) adminInput.value = GOOGLE_SHEET_URL;
+
             saveToLocalStorage();
             syncToGoogleSheets(false);
         }
