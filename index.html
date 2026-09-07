@@ -595,10 +595,20 @@
                 <h3 class="font-bold text-slate-800 text-sm">Flag New Student for Support / Intervention</h3>
                 <button onclick="closeModal('addStudentModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <div class="space-y-3 text-xs">
+            <form id="addStudentForm" onsubmit="handleSaveStudent(event)" class="space-y-3 text-xs">
                 <div>
-                    <label class="block font-semibold text-slate-600 mb-1">Student Full Name</label>
-                    <input type="text" id="newStudentName" placeholder="e.g. Tariq Al-Ghamdi" class="w-full text-xs rounded-lg border-slate-300 border p-2 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                    <label class="block font-semibold text-slate-600 mb-1">Student Full Name <span class="text-rose-500">*</span></label>
+                    <input type="text" id="newStudentName" required placeholder="e.g. Tariq Al-Ghamdi" class="w-full text-xs rounded-lg border-slate-300 border p-2 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-semibold text-slate-600 mb-1">Grade / Class <span class="text-rose-500">*</span></label>
+                        <input type="text" id="newStudentGrade" required placeholder="e.g. Grade 5" class="w-full text-xs rounded-lg border-slate-300 border p-2 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-600 mb-1">Section / Stream <span class="text-rose-500">*</span></label>
+                        <input type="text" id="newStudentSection" required placeholder="e.g. 5-A or Section B" class="w-full text-xs rounded-lg border-slate-300 border p-2 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                    </div>
                 </div>
                 <div class="p-3 bg-amber-50 border border-amber-200 rounded-lg text-amber-900 text-[11px] leading-relaxed">
                     <i class="fa-solid fa-info-circle mr-1 text-amber-600"></i>
@@ -606,61 +616,7 @@
                 </div>
                 <div class="flex justify-end space-x-2 pt-3 border-t">
                     <button type="button" onclick="closeModal('addStudentModal')" class="px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-100 rounded-lg">Cancel</button>
-                    <button type="button" onclick="saveNewStudent()" class="px-4 py-1.5 bg-brand-700 hover:bg-brand-800 text-white text-xs font-semibold rounded-lg">Add Student</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL: ADD LONGITUDINAL PROGRESS CHECKPOINT -->
-    <div id="progressModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center hidden no-print p-4">
-        <div class="bg-white rounded-xl shadow-xl border border-slate-200 max-w-md w-full p-6 space-y-4">
-            <div class="flex justify-between items-center border-b pb-3">
-                <h3 class="font-bold text-slate-800 text-sm">Log Weekly Progress Checkpoint</h3>
-                <button onclick="closeModal('progressModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <form onsubmit="saveProgressCheckpoint(event)" class="space-y-3 text-xs">
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block font-semibold text-slate-600 mb-1">Week Label</label>
-                        <input type="text" id="checkpointWeek" required placeholder="e.g. Week 5" class="w-full text-xs rounded-lg border-slate-300 border p-2">
-                    </div>
-                    <div>
-                        <label class="block font-semibold text-slate-600 mb-1">Date</label>
-                        <input type="date" id="checkpointDate" required class="w-full text-xs rounded-lg border-slate-300 border p-2">
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block font-semibold text-slate-600 mb-1">Reading Score (0-100)</label>
-                        <input type="number" id="checkpointReading" min="0" max="100" required placeholder="e.g. 65" class="w-full text-xs rounded-lg border-slate-300 border p-2">
-                    </div>
-                    <div>
-                        <label class="block font-semibold text-slate-600 mb-1">Writing Score (0-100)</label>
-                        <input type="number" id="checkpointWriting" min="0" max="100" required placeholder="e.g. 70" class="w-full text-xs rounded-lg border-slate-300 border p-2">
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block font-semibold text-slate-600 mb-1">Behavior Rating (0-100)</label>
-                        <input type="number" id="checkpointBehavior" min="0" max="100" required placeholder="e.g. 80" class="w-full text-xs rounded-lg border-slate-300 border p-2">
-                    </div>
-                    <div>
-                        <label class="block font-semibold text-slate-600 mb-1">Homework Effort (0-100)</label>
-                        <input type="number" id="checkpointEffort" min="0" max="100" required placeholder="e.g. 75" class="w-full text-xs rounded-lg border-slate-300 border p-2">
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block font-semibold text-slate-600 mb-1">Weekly Teacher Observation</label>
-                    <input type="text" id="checkpointNotes" placeholder="e.g. Began using sentence starters independently." class="w-full text-xs rounded-lg border-slate-300 border p-2">
-                </div>
-
-                <div class="flex justify-end space-x-2 pt-3 border-t">
-                    <button type="button" onclick="closeModal('progressModal')" class="px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-100 rounded-lg">Cancel</button>
-                    <button type="submit" class="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg">Save Checkpoint</button>
+                    <button type="submit" class="px-4 py-1.5 bg-brand-700 hover:bg-brand-800 text-white text-xs font-semibold rounded-lg">Add Student</button>
                 </div>
             </form>
         </div>
@@ -725,10 +681,11 @@
     <div id="interventionModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center hidden no-print overflow-y-auto p-4">
         <div class="bg-white rounded-xl shadow-xl border border-slate-200 max-w-2xl w-full p-6 space-y-4 my-8">
             <div class="flex justify-between items-center border-b pb-3">
-                <h3 class="font-bold text-slate-800 text-sm">Create English Intervention Plan</h3>
+                <h3 id="interventionModalTitle" class="font-bold text-slate-800 text-sm">Create English Intervention Plan</h3>
                 <button onclick="closeModal('interventionModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <form id="interventionForm" onsubmit="saveInterventionPlan(event)" class="space-y-4 text-xs">
+                <input type="hidden" id="editPlanId" value="">
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block font-semibold text-slate-600 mb-1">Student</label>
@@ -788,7 +745,7 @@
 
                 <div class="flex justify-end space-x-2 pt-3 border-t">
                     <button type="button" onclick="closeModal('interventionModal')" class="px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-100 rounded-lg">Cancel</button>
-                    <button type="submit" class="px-4 py-1.5 bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold rounded-lg">Create Plan</button>
+                    <button type="submit" id="btnSavePlanSubmit" class="px-4 py-1.5 bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold rounded-lg">Create Plan</button>
                 </div>
             </form>
         </div>
@@ -1288,7 +1245,12 @@
                 tr.innerHTML = `
                     <td class="p-2 text-center font-bold text-slate-500">${index + 1}</td>
                     <td class="p-2">
-                        <input type="text" value="${escapeHtml(student.name)}" onchange="updateStudentName('${student.id}', this.value)" class="w-full font-semibold text-slate-800 bg-transparent focus:bg-white border-b border-transparent focus:border-brand-600 focus:outline-none p-1">
+                        <div class="flex flex-col">
+                            <input type="text" value="${escapeHtml(student.name)}" onchange="updateStudentName('${student.id}', this.value)" class="w-full font-semibold text-slate-800 bg-transparent focus:bg-white border-b border-transparent focus:border-brand-600 focus:outline-none p-0.5">
+                            <span class="text-[10px] text-slate-400 font-medium px-0.5">
+                                ${escapeHtml(student.grade || appState.header.grade || 'Grade 5')} &bull; ${escapeHtml(student.section || 'General')}
+                            </span>
+                        </div>
                     </td>
                     <td class="p-2 text-center">
                         <select onchange="updateMark('${student.id}', 'att', this.value)" class="text-xs rounded border border-slate-300 p-1 bg-white">
@@ -1416,15 +1378,27 @@
 
         function openAddStudentModal() {
             document.getElementById('newStudentName').value = '';
+            document.getElementById('newStudentGrade').value = appState.header.grade || '';
+            document.getElementById('newStudentSection').value = '';
             document.getElementById('addStudentModal').classList.remove('hidden');
         }
 
-        function saveNewStudent() {
+        function handleSaveStudent(e) {
+            e.preventDefault();
             const nameInput = document.getElementById('newStudentName').value.trim();
-            if(nameInput) {
+            const gradeInput = document.getElementById('newStudentGrade').value.trim() || appState.header.grade || 'Grade 5';
+            const sectionInput = document.getElementById('newStudentSection').value.trim();
+
+            if (nameInput) {
                 const newId = Date.now().toString();
                 // Flagged by default since app tracks students needing support
-                appState.students.push({ id: newId, name: nameInput, flagged: true });
+                appState.students.push({
+                    id: newId,
+                    name: nameInput,
+                    grade: gradeInput,
+                    section: sectionInput,
+                    flagged: true
+                });
                 appState.weeklyMarks[newId] = { att: 'P', part: 'Needs Encouragement', beh: 'Off-Task', cw: '2', hw: '1', books: 'N', quiz: '5/10', midterm: '55%', project: '6/10', reading: 'N', writing: 'N' };
 
                 // Seed initial longitudinal history for Chart.js
@@ -1549,10 +1523,45 @@
 
         function openInterventionModal() {
             populateStudentDropdowns();
+            document.getElementById('editPlanId').value = '';
+            document.getElementById('interventionModalTitle').innerText = "Create English Intervention Plan";
+            document.getElementById('btnSavePlanSubmit').innerText = "Create Plan";
+            document.getElementById('interventionForm').reset();
+
             document.getElementById('planStartDate').value = new Date().toISOString().split('T')[0];
             const revDate = new Date();
             revDate.setDate(revDate.getDate() + 30);
             document.getElementById('planReviewDate').value = revDate.toISOString().split('T')[0];
+            document.getElementById('interventionModal').classList.remove('hidden');
+        }
+
+        function openEditInterventionModal(planId) {
+            const plan = appState.interventionPlans.find(p => p.id === planId);
+            if (!plan) return;
+
+            populateStudentDropdowns();
+            document.getElementById('editPlanId').value = plan.id;
+            document.getElementById('interventionModalTitle').innerText = `Edit Intervention Plan: ${plan.studentName}`;
+            document.getElementById('btnSavePlanSubmit').innerText = "Save Plan Changes";
+
+            document.getElementById('planStudentSelect').value = plan.studentId;
+            document.getElementById('planSupportStaff').value = plan.supportStaff || '';
+            document.getElementById('planStartDate').value = plan.startDate || '';
+            document.getElementById('planReviewDate').value = plan.reviewDate || '';
+            document.getElementById('planProblemDesc').value = plan.problemDesc || '';
+            document.getElementById('planGoalText').value = plan.goalText || '';
+
+            // Checkboxes
+            const weaknesses = plan.weaknesses || [];
+            document.querySelectorAll('input[name="weakness"]').forEach(cb => {
+                cb.checked = weaknesses.includes(cb.value);
+            });
+
+            const accommodations = plan.accommodations || [];
+            document.querySelectorAll('input[name="accommodation"]').forEach(cb => {
+                cb.checked = accommodations.includes(cb.value);
+            });
+
             document.getElementById('interventionModal').classList.remove('hidden');
         }
 
@@ -1561,9 +1570,35 @@
             const studentSelect = document.getElementById('planStudentSelect');
             const selectedOpt = studentSelect.options[studentSelect.selectedIndex];
 
+            const editPlanId = document.getElementById('editPlanId').value;
             const weaknesses = Array.from(document.querySelectorAll('input[name="weakness"]:checked')).map(cb => cb.value);
             const accommodations = Array.from(document.querySelectorAll('input[name="accommodation"]:checked')).map(cb => cb.value);
 
+            if (editPlanId) {
+                // Update existing plan
+                const existingPlan = appState.interventionPlans.find(p => p.id === editPlanId);
+                if (existingPlan) {
+                    existingPlan.studentId = studentSelect.value;
+                    existingPlan.studentName = selectedOpt ? selectedOpt.text : existingPlan.studentName;
+                    existingPlan.supportStaff = document.getElementById('planSupportStaff').value;
+                    existingPlan.startDate = document.getElementById('planStartDate').value;
+                    existingPlan.reviewDate = document.getElementById('planReviewDate').value;
+                    existingPlan.weaknesses = weaknesses;
+                    existingPlan.problemDesc = document.getElementById('planProblemDesc').value;
+                    existingPlan.goalText = document.getElementById('planGoalText').value;
+                    existingPlan.accommodations = accommodations;
+
+                    renderInterventionList();
+                    showInterventionDetail(existingPlan.id);
+                    updateStatsCounters();
+                    saveToLocalStorage();
+                    closeModal('interventionModal');
+                    triggerDebouncedSync();
+                    return;
+                }
+            }
+
+            // Create new plan
             const newPlan = {
                 id: 'ip_' + Date.now(),
                 studentId: studentSelect.value,
@@ -1602,6 +1637,9 @@
                         </div>
                         <div class="flex items-center space-x-2">
                             <span class="px-3 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">${escapeHtml(plan.status || 'Active')}</span>
+                            <button onclick="openEditInterventionModal('${plan.id}')" class="text-xs text-purple-700 hover:text-purple-900 font-semibold border border-purple-300 bg-purple-50 px-2.5 py-1 rounded-lg flex items-center gap-1 transition">
+                                <i class="fa-solid fa-pen-to-square"></i> Edit Plan
+                            </button>
                             <button onclick="deleteInterventionPlan('${plan.id}')" class="text-xs text-red-600 hover:text-red-800 font-medium border border-red-200 bg-red-50 px-2.5 py-1 rounded-lg">Delete</button>
                         </div>
                     </div>
@@ -1624,9 +1662,9 @@
                         </div>
                     </div>
 
-                    <div class="bg-slate-50 p-3 rounded-lg border text-xs">
-                        <span class="font-bold text-slate-700 block mb-1">Observed Class Impact:</span>
-                        <p class="text-slate-600">${escapeHtml(plan.problemDesc || 'N/A')}</p>
+                    <div class="bg-amber-50/60 p-3 rounded-lg border border-amber-200 text-xs">
+                        <span class="font-bold text-amber-900 block mb-1"><i class="fa-solid fa-eye text-amber-600 mr-1"></i> Observed Classroom Impact / Specific Difficulty:</span>
+                        <p class="text-slate-800 font-medium bg-white p-2 rounded border border-amber-100">${escapeHtml(plan.problemDesc || 'N/A')}</p>
                     </div>
 
                     <div class="bg-slate-50 p-3 rounded-lg border text-xs">
@@ -1674,6 +1712,9 @@
             const marks = appState.weeklyMarks[student.id] || {};
             const parentLogs = appState.parentLogs.filter(p => p.studentId === student.id || p.studentName === student.name);
             const plans = appState.interventionPlans.filter(p => p.studentId === student.id || p.studentName === student.name);
+
+            const displayGrade = student.grade || appState.header.grade || 'Grade 5';
+            const displaySection = student.section ? ` / Section ${student.section}` : '';
 
             // Helpers for visual badges & icons merged from second application
             const getAttendanceBadge = (val) => {
@@ -1743,7 +1784,7 @@
                     <div style="height:3px; background:linear-gradient(90deg,#0c4a6e 0%, #f59e0b 50%, #0c4a6e 100%); margin-top:-3px;"></div>
                 </div>
 
-                <!-- STUDENT METADATA CARD -->
+                <!-- STUDENT METADATA CARD (FULL CLASS & SECTION DISPLAY) -->
                 <div class="relative overflow-hidden text-white p-5 rounded-xl shadow-sm flex flex-wrap justify-between items-center gap-4 mt-6" style="z-index:1; background:linear-gradient(120deg,#0c4a6e 0%,#0f172a 100%); border:1px solid #0c4a6e; border-left:5px solid #f59e0b;">
                     <div class="space-y-1">
                         <div class="flex items-center space-x-2">
@@ -1751,7 +1792,7 @@
                             <span class="px-2.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded-full uppercase tracking-wider"><i class="fa-solid fa-flag mr-1"></i> Active Intervention</span>
                         </div>
                         <p class="text-xs text-slate-300">
-                            <strong class="text-gold-400">Grade/Class:</strong> ${escapeHtml(appState.header.grade || 'Grade 5')} &nbsp;&bull;&nbsp;
+                            <strong class="text-gold-400">Class &amp; Section:</strong> <span class="text-white font-semibold">${escapeHtml(displayGrade)}${escapeHtml(displaySection)}</span> &nbsp;&bull;&nbsp;
                             <strong class="text-gold-400">Teacher:</strong> ${escapeHtml(appState.header.teacher || 'Assigned Teacher')} &nbsp;&bull;&nbsp;
                             <strong class="text-gold-400">Subject:</strong> ${escapeHtml(appState.header.subject || 'English Language')}
                         </p>
@@ -1779,7 +1820,7 @@
                     </div>
                 </div>
 
-                <!-- SECTION 2: CURRENT SKILL & PERFORMANCE SNAPSHOT WITH RICH BADGES -->
+                <!-- SECTION 2: CURRENT SKILL & PERFORMANCE SNAPSHOT -->
                 <div class="space-y-3">
                     <h3 class="text-xs font-bold uppercase tracking-wider text-slate-800 flex items-center gap-2 border-b-2 border-slate-200 pb-2">
                         <span class="inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-extrabold text-white flex-shrink-0" style="background:#0c4a6e;">2</span>
@@ -1833,7 +1874,7 @@
                     </div>
                 </div>
 
-                <!-- SECTION 3: STRUCTURED INTERVENTION ACTION PLAN -->
+                <!-- SECTION 3: STRUCTURED INTERVENTION ACTION PLAN WITH OBSERVED IMPACT -->
                 <div class="space-y-3">
                     <h3 class="text-xs font-bold uppercase tracking-wider text-slate-800 flex items-center gap-2 border-b-2 border-slate-200 pb-2">
                         <span class="inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-extrabold text-white flex-shrink-0" style="background:#0c4a6e;">3</span>
@@ -1849,6 +1890,15 @@
                                 <span class="font-bold text-purple-900 text-xs">Remediation Status: <span class="uppercase tracking-wider font-extrabold text-purple-700">${escapeHtml(p.status || 'Active')}</span></span>
                                 <span class="text-slate-600 font-medium">Review Schedule: <strong>${escapeHtml(p.startDate)}</strong> to <strong>${escapeHtml(p.reviewDate)}</strong></span>
                             </div>
+
+                            <!-- OBSERVED CLASSROOM IMPACT / SPECIFIC DIFFICULTY -->
+                            <div class="bg-amber-50/70 p-3 rounded-lg border border-amber-200">
+                                <span class="font-bold text-amber-900 block mb-1">
+                                    <i class="fa-solid fa-eye text-amber-600 mr-1.5"></i> Observed Classroom Impact / Specific Difficulty:
+                                </span>
+                                <p class="text-slate-800 font-medium bg-white p-2 rounded border border-amber-100">${escapeHtml(p.problemDesc || 'Difficulty maintaining focus on multi-sentence compositions without direct teacher prompting.')}</p>
+                            </div>
+
                             <div>
                                 <span class="font-bold text-slate-700 block mb-1">Target SMART Objective:</span>
                                 <p class="text-slate-800 bg-white p-2.5 rounded-lg border border-purple-100 font-semibold">${escapeHtml(p.goalText || 'No SMART goal specified.')}</p>
@@ -1938,16 +1988,17 @@
                 renderChart(history);
             }, 50);
         }
+
         function seedSampleData() {
-            appState.header.grade = 'Grade 5 / Class A';
+            appState.header.grade = 'Grade 5';
             appState.header.week = 'Week 4';
             appState.header.date = new Date().toISOString().split('T')[0];
             appState.header.subject = 'English Language';
 
             appState.students = [
-                { id: '101', name: 'Tariq Al-Ghamdi', flagged: true },
-                { id: '102', name: 'Majed Al-Mutairi', flagged: true },
-                { id: '103', name: 'Abdullah Al-Mansoor', flagged: true }
+                { id: '101', name: 'Tariq Al-Ghamdi', grade: 'Grade 5', section: '5-A', flagged: true },
+                { id: '102', name: 'Majed Al-Mutairi', grade: 'Grade 5', section: '5-B', flagged: true },
+                { id: '103', name: 'Abdullah Al-Mansoor', grade: 'Grade 5', section: '5-A', flagged: true }
             ];
 
             appState.weeklyMarks = {
