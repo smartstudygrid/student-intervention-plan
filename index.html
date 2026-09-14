@@ -64,7 +64,6 @@
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
-        /* Crisp PDF and Print Page-Break Protection */
         .pdf-avoid-break {
             break-inside: avoid !important;
             page-break-inside: avoid !important;
@@ -79,6 +78,52 @@
             text-rendering: optimizeLegibility;
         }
     </style>
+
+    <!-- FIREBASE CLOUD FIRESTORE MODULAR SDK (v10) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { 
+            getFirestore, collection, addDoc, getDocs, doc, setDoc, getDoc, deleteDoc, 
+            onSnapshot, query, where 
+        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyD3KLd5nrhHIhs5eO3d09vdI-9MmlreUhA",
+            authDomain: "igcse-writing-portal.firebaseapp.com",
+            projectId: "igcse-writing-portal",
+            storageBucket: "igcse-writing-portal.firebasestorage.app",
+            messagingSenderId: "599978405214",
+            appId: "1:599978405214:web:b16ebf8644f3049cc1b3cf"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.db = db;
+        window.firestoreTools = { 
+            collection, addDoc, getDocs, doc, setDoc, getDoc, deleteDoc, onSnapshot, query, where 
+        };
+
+        // Real-time Staff Roster Listener
+        window.addEventListener('DOMContentLoaded', () => {
+            initFirebaseListeners();
+        });
+
+        function initFirebaseListeners() {
+            // Listen for Staff updates
+            onSnapshot(collection(db, "staff"), (snapshot) => {
+                const staffList = [];
+                snapshot.forEach((docSnap) => {
+                    staffList.push({ id: docSnap.id, ...docSnap.data() });
+                });
+                if (typeof window.syncStaffFromFirebase === 'function') {
+                    window.syncStaffFromFirebase(staffList);
+                }
+            }, (error) => {
+                console.warn("Firestore staff listener error:", error);
+            });
+        }
+    </script>
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col">
 
@@ -87,12 +132,15 @@
         <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-md w-full p-6 sm:p-8 space-y-6">
             <div class="text-center space-y-2">
                 <div class="inline-flex items-center justify-center mb-1">
-                    <img class="ais-logo h-16 w-auto max-h-16 object-contain border-0" src="logo.png" alt="Al-Rowad International Schools">
+                    <img class="ais-logo h-16 w-auto max-h-16 object-contain border-0" src="logo.png" alt="Al-Rowad International Schools" onerror="this.style.display='none'; document.getElementById('loginFallbackIcon').classList.remove('hidden');">
+                    <div id="loginFallbackIcon" class="hidden w-14 h-14 rounded-2xl bg-brand-800 text-white flex items-center justify-center text-2xl shadow-md">
+                        <i class="fa-solid fa-graduation-cap"></i>
+                    </div>
                 </div>
                 <h2 class="text-xl font-extrabold text-slate-900 tracking-tight">Al-Rowad English Department</h2>
                 <p class="text-xs text-slate-500 font-medium">Intervention &amp; Follow-Up Portal Login</p>
-                <div class="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-800 border border-amber-200">
-                    <i class="fa-solid fa-triangle-exclamation mr-1"></i> Flagged &amp; Support Students Only
+                <div class="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                    <i class="fa-solid fa-cloud mr-1 text-emerald-600"></i> Connected to Firebase Cloud
                 </div>
             </div>
 
@@ -101,7 +149,7 @@
                     <label class="block font-semibold text-slate-700 uppercase tracking-wider mb-1">Select Staff Member</label>
                     <div class="relative">
                         <select id="loginTeacherSelect" required class="w-full text-xs font-medium rounded-lg border-slate-300 border p-2.5 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-brand-600 focus:outline-none pr-8">
-                            <option value="">Connecting to database...</option>
+                            <option value="">Loading staff roster from Firebase...</option>
                         </select>
                         <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-400">
                             <i class="fa-solid fa-user-tie"></i>
@@ -112,7 +160,7 @@
                 <div>
                     <label class="block font-semibold text-slate-700 uppercase tracking-wider mb-1">Password</label>
                     <div class="relative">
-                        <input type="password" id="loginPassword" required placeholder="Enter password (e.g. E20232)" class="w-full text-xs rounded-lg border-slate-300 border p-2.5 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-brand-600 focus:outline-none pr-8">
+                        <input type="password" id="loginPassword" required placeholder="Enter your staff password" class="w-full text-xs rounded-lg border-slate-300 border p-2.5 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-brand-600 focus:outline-none pr-8">
                         <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-400">
                             <i class="fa-solid fa-lock"></i>
                         </div>
@@ -139,7 +187,10 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-wrap justify-between items-center gap-4">
             <div class="flex items-center space-x-3">
                 <div class="flex items-center justify-center">
-                    <img class="ais-logo h-11 w-auto max-h-12 object-contain border-0" src="logo.png" alt="Al-Rowad International Schools">
+                    <img class="ais-logo h-11 w-auto max-h-12 object-contain border-0" src="logo.png" alt="Al-Rowad International Schools" onerror="this.style.display='none'; document.getElementById('headerFallbackIcon').classList.remove('hidden');">
+                    <div id="headerFallbackIcon" class="hidden w-10 h-10 rounded-xl bg-brand-700 text-white flex items-center justify-center text-lg shadow-sm">
+                        <i class="fa-solid fa-graduation-cap"></i>
+                    </div>
                 </div>
                 <div>
                     <h1 class="font-bold text-lg leading-tight tracking-wide">Al-Rowad International Schools</h1>
@@ -155,11 +206,16 @@
                 </div>
 
                 <span id="saveBadge" class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-900/60 text-emerald-300 border border-emerald-700/50">
-                    <i class="fa-solid fa-cloud-arrow-up mr-1.5 text-emerald-400"></i> Synced
+                    <i class="fa-solid fa-cloud mr-1.5 text-emerald-400"></i> Firebase Live
                 </span>
 
-                <button onclick="syncToGoogleSheets(false)" class="px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-medium rounded-lg shadow-sm transition flex items-center">
-                    <i class="fa-solid fa-rotate mr-1.5 text-emerald-200"></i> Sync Now
+                <button onclick="saveCurrentTeacherToFirebase(false)" class="px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-medium rounded-lg shadow-sm transition flex items-center">
+                    <i class="fa-solid fa-cloud-arrow-up mr-1.5 text-emerald-200"></i> Save Cloud
+                </button>
+
+                <!-- Manage Staff (Visible to Admin in Header) -->
+                <button id="headerManageStaffBtn" onclick="openManageStaffModal()" class="hidden px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-medium rounded-lg shadow-sm transition flex items-center">
+                    <i class="fa-solid fa-users-gear mr-1.5 text-amber-200"></i> Manage Staff
                 </button>
 
                 <button onclick="handleLogout()" title="Log out from system" class="px-3 py-1.5 bg-slate-800 hover:bg-red-800 text-slate-200 hover:text-white text-xs font-medium rounded-lg border border-slate-700 transition flex items-center">
@@ -171,16 +227,37 @@
 
     <!-- ADMIN CONSOLIDATED BANNER (Visible only to Admin/HOD) -->
     <div id="adminNoticeBanner" class="hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4 w-full no-print">
-        <div class="p-3.5 bg-gradient-to-r from-amber-600 to-amber-700 text-white rounded-xl shadow-sm flex items-center justify-between">
+        <div class="p-3.5 bg-gradient-to-r from-amber-600 to-amber-700 text-white rounded-xl shadow-sm flex flex-wrap items-center justify-between gap-3">
             <div class="flex items-center space-x-3">
                 <i class="fa-solid fa-shield-halved text-xl"></i>
                 <div>
                     <h3 class="font-bold text-xs">Admin Mode &bull; Head of Department Dashboard</h3>
-                    <p class="text-[11px] text-amber-100">You are viewing consolidated intervention records across all teachers in the English department.</p>
+                    <p class="text-[11px] text-amber-100">Managing department intervention records &amp; staff roster stored securely in Firebase Firestore.</p>
                 </div>
             </div>
-            <button onclick="switchTab('adminDashboardTab')" class="px-3 py-1 bg-white text-amber-800 font-bold text-xs rounded-lg shadow hover:bg-amber-50 transition">
-                Open Department Dashboard
+            <div class="flex items-center gap-2">
+                <button onclick="openManageStaffModal()" class="px-3 py-1.5 bg-amber-900/60 hover:bg-amber-950 text-white font-bold text-xs rounded-lg border border-amber-400/40 shadow transition flex items-center">
+                    <i class="fa-solid fa-users-gear mr-1.5 text-amber-300"></i> Manage Staff &amp; Passwords
+                </button>
+                <button onclick="switchTab('adminDashboardTab')" class="px-3 py-1.5 bg-white text-amber-800 font-bold text-xs rounded-lg shadow hover:bg-amber-50 transition">
+                    Open Department Dashboard
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ADMIN INSPECTION MODE BANNER -->
+    <div id="adminInspectionBanner" class="hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-3 w-full no-print">
+        <div class="p-3 bg-indigo-900 text-white rounded-xl shadow-sm flex flex-wrap items-center justify-between gap-3 border border-indigo-700">
+            <div class="flex items-center space-x-3">
+                <i class="fa-solid fa-user-check text-indigo-300 text-lg"></i>
+                <div>
+                    <span class="text-xs font-bold uppercase tracking-wider text-indigo-200">Admin Inspection Mode</span>
+                    <p class="text-xs text-white">Currently viewing records &amp; reports for: <strong id="adminInspectingTeacherName" class="text-amber-300 font-semibold">-</strong></p>
+                </div>
+            </div>
+            <button onclick="exitAdminInspectionMode()" class="px-3.5 py-1.5 bg-indigo-700 hover:bg-indigo-600 text-white font-bold text-xs rounded-lg border border-indigo-400 transition flex items-center gap-1.5 shadow-sm">
+                <i class="fa-solid fa-arrow-left"></i> Return to HOD Master Overview
             </button>
         </div>
     </div>
@@ -238,7 +315,7 @@
                 <i class="fa-solid fa-chart-pie mr-2"></i> Department Master Overview
             </button>
             <button onclick="switchTab('settingsTab')" id="btn-settingsTab" class="tab-btn py-3 px-3 text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 whitespace-nowrap flex items-center">
-                <i class="fa-solid fa-sliders mr-2"></i> Sync &amp; Backup
+                <i class="fa-solid fa-cloud-arrow-up mr-2"></i> Cloud Sync &amp; Backup
             </button>
         </div>
     </nav>
@@ -354,7 +431,7 @@
             <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex flex-wrap justify-between items-center gap-4 no-print">
                 <div>
                     <h2 class="text-base font-bold text-slate-800">Parent Communication Log</h2>
-                    <p class="text-xs text-slate-500">Record calls, WhatsApp messages, parent meetings, and agreed home interventions.</p>
+                    <p class="text-xs text-slate-500">Record calls, messages, parent meetings, and agreed home interventions saved to Firebase.</p>
                 </div>
                 <button onclick="openParentLogModal()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg shadow-sm transition flex items-center">
                     <i class="fa-solid fa-plus mr-1.5"></i> Log New Contact
@@ -389,7 +466,7 @@
             <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex flex-wrap justify-between items-center gap-4 no-print">
                 <div>
                     <h2 class="text-base font-bold text-slate-800">English Intervention Plans</h2>
-                    <p class="text-xs text-slate-500">Structured 4–6 week SMART goal support frameworks for students needing extra help.</p>
+                    <p class="text-xs text-slate-500">Structured 4–6 week SMART goal support frameworks stored in Cloud Firestore.</p>
                 </div>
                 <button onclick="openInterventionModal()" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold rounded-lg shadow-sm transition flex items-center">
                     <i class="fa-solid fa-plus mr-1.5"></i> Create New Plan
@@ -448,41 +525,26 @@
             <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-4">
                 <div class="flex flex-wrap justify-between items-center gap-3 border-b pb-4">
                     <div>
-                        <h2 class="text-lg font-bold text-slate-900">Department Consolidated Overview</h2>
-                        <p class="text-xs text-slate-500">Master view aggregating flagged students, behavioral alerts, and intervention plans across all teacher tabs.</p>
+                        <div class="flex items-center space-x-2">
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 uppercase">HOD Central Grid</span>
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">Firebase Active</span>
+                        </div>
+                        <h2 class="text-lg font-bold text-slate-900 mt-1">Department Consolidated Overview</h2>
+                        <p class="text-xs text-slate-500">Live multi-teacher dashboard aggregating flagged cases and intervention plans across all teacher databases.</p>
                     </div>
-                    <button onclick="loadAdminData()" class="px-3.5 py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-lg shadow transition flex items-center">
-                        <i class="fa-solid fa-arrows-rotate mr-1.5"></i> Refresh Master Data
-                    </button>
+                    <div class="flex items-center gap-2">
+                        <button onclick="openManageStaffModal()" class="px-3.5 py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-lg shadow transition flex items-center">
+                            <i class="fa-solid fa-users-gear mr-1.5"></i> Manage Staff
+                        </button>
+                        <button onclick="loadAdminData()" class="px-3.5 py-2 bg-brand-800 hover:bg-brand-900 text-white text-xs font-bold rounded-lg shadow transition flex items-center">
+                            <i class="fa-solid fa-arrows-rotate mr-1.5"></i> Refresh Master Cloud Data
+                        </button>
+                    </div>
                 </div>
 
-                <!-- Admin Backend Web App Endpoint Configuration -->
-                <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2.5">
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center space-x-2 text-slate-800">
-                            <i class="fa-solid fa-gears text-brand-700 text-sm"></i>
-                            <h3 class="font-bold text-xs uppercase tracking-wider">Google Apps Script Backend Endpoint (Admin Control)</h3>
-                        </div>
-                        <span class="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                            <i class="fa-solid fa-link mr-1"></i> Active Backend
-                        </span>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-2 pt-1">
-                        <div class="md:col-span-3">
-                            <input type="text" id="adminGoogleSheetUrl" placeholder="https://script.google.com/macros/s/.../exec" class="w-full text-xs rounded-lg border-slate-300 border p-2 focus:ring-2 focus:ring-amber-500 font-mono">
-                        </div>
-                        <div>
-                            <button type="button" onclick="updateGoogleSheetUrl(document.getElementById('adminGoogleSheetUrl').value)" class="w-full py-2 px-3 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-lg shadow-sm transition flex items-center justify-center gap-1.5">
-                                <i class="fa-solid fa-floppy-disk"></i> Update Endpoint
-                            </button>
-                        </div>
-                    </div>
-                    <p class="text-[10px] text-slate-500">Configure or redirect the deployed Google Apps Script Web App URL (<code class="font-mono">/exec</code>) for all teacher and department sync operations.</p>
-                </div>
-
-                <!-- Teacher Tab Summaries -->
+                <!-- Teacher Card Summaries -->
                 <div class="space-y-2">
-                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-700">Teacher Sheets &amp; Tab Status</h3>
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-700">Teacher Cloud Records &amp; Status</h3>
                     <div id="adminTeacherCards" class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <!-- Populated dynamically -->
                     </div>
@@ -507,10 +569,11 @@
                                         <th class="p-3 text-center">Behavior</th>
                                         <th class="p-3 text-center">Homework</th>
                                         <th class="p-3 text-center">Priority</th>
+                                        <th class="p-3 text-center min-w-[140px]">Student Report</th>
                                     </tr>
                                 </thead>
                                 <tbody id="adminTbody" class="divide-y divide-slate-200">
-                                    <tr><td colspan="8" class="text-center p-6 text-slate-400">Loading master department data...</td></tr>
+                                    <tr><td colspan="9" class="text-center p-6 text-slate-400">Loading master department data...</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -519,35 +582,32 @@
             </div>
         </section>
 
-        <!-- TAB 6: DATA MANAGEMENT & SYNC -->
+        <!-- TAB 6: CLOUD SYNC & DATA BACKUP -->
         <section id="settingsTab" class="tab-content hidden space-y-6">
             <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-6">
                 <div>
-                    <h2 class="text-base font-bold text-slate-800">Google Sheet Dynamic Tab Connection</h2>
-                    <p class="text-xs text-slate-500">Every teacher saves their monitored students to their own dedicated tab in the department Google Sheet.</p>
+                    <h2 class="text-base font-bold text-slate-800">Firebase Firestore Cloud Sync</h2>
+                    <p class="text-xs text-slate-500">Every teacher saves their monitored students directly to their dedicated document in the Google Firebase database.</p>
                 </div>
 
                 <div class="p-5 border border-emerald-200 bg-emerald-50/50 rounded-xl space-y-4">
                     <div class="flex items-center space-x-3 text-emerald-800">
                         <div class="p-2.5 bg-emerald-600 text-white rounded-lg shadow-sm">
-                            <i class="fa-solid fa-table-cells text-xl"></i>
+                            <i class="fa-solid fa-cloud text-xl"></i>
                         </div>
                         <div>
-                            <h3 class="font-bold text-sm text-slate-800">Direct Google Sheet Routing</h3>
-                            <p class="text-xs text-slate-600">Active Tab: <strong id="settingsActiveTabName" class="text-brand-900 font-mono">-</strong></p>
+                            <h3 class="font-bold text-sm text-slate-800">Firebase Firestore Project: <span class="font-mono text-brand-900">igcse-writing-portal</span></h3>
+                            <p class="text-xs text-slate-600">Active Teacher Cloud Document: <strong id="settingsActiveTabName" class="text-brand-900 font-mono">-</strong></p>
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Google Apps Script Web App URL</label>
-                            <input type="text" id="settingsGoogleSheetUrl" onchange="updateGoogleSheetUrl(this.value)" class="w-full text-xs rounded-lg border-slate-300 border p-2 focus:ring-2 focus:ring-emerald-600 font-mono">
-                        </div>
-                        <div class="flex items-end">
-                            <button onclick="syncToGoogleSheets(false)" id="btnSyncNow" class="w-full px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg shadow transition flex items-center justify-center">
-                                <i class="fa-solid fa-rotate mr-1.5"></i> Synchronize with Teacher Tab Now
-                            </button>
-                        </div>
+                    <div class="flex flex-wrap items-center gap-3 pt-2">
+                        <button onclick="saveCurrentTeacherToFirebase(false)" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg shadow transition flex items-center">
+                            <i class="fa-solid fa-cloud-arrow-up mr-2"></i> Save My Records to Firebase Now
+                        </button>
+                        <button onclick="loadTeacherDataFromFirebase(currentUser ? currentUser.name : '')" class="px-4 py-2.5 bg-white hover:bg-slate-100 text-slate-700 text-xs font-semibold rounded-lg border border-slate-300 shadow-sm transition flex items-center">
+                            <i class="fa-solid fa-arrows-rotate mr-2 text-brand-700"></i> Pull Latest from Cloud
+                        </button>
                     </div>
                     <div id="syncStatusMsg" class="text-xs font-medium text-slate-600 hidden"></div>
                 </div>
@@ -592,7 +652,7 @@
                     <div class="flex items-center justify-between bg-red-50 p-4 rounded-xl border border-red-200">
                         <div>
                             <p class="text-xs font-bold text-red-800">Clear Current Local Cache</p>
-                            <p class="text-[11px] text-red-600">Resets locally cached records for this teacher (does not delete data on Google Sheet).</p>
+                            <p class="text-[11px] text-red-600">Resets locally cached records for this teacher (does not delete records in Firebase).</p>
                         </div>
                         <button onclick="confirmResetData()" class="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-lg transition">
                             Clear Local Cache
@@ -611,6 +671,70 @@
             <p class="text-slate-400">Head of Department: <span class="font-semibold text-amber-400">Amanullah Khan</span> &bull; Subject Director: <span class="font-semibold text-sky-400">Malak Rajeh</span></p>
         </div>
     </footer>
+
+    <!-- MODAL: MANAGE STAFF & PASSWORDS (ADMIN ONLY - MANUAL & CSV) -->
+    <div id="manageStaffModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden no-print p-4">
+        <div class="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl border border-slate-100 space-y-4 max-h-[90vh] flex flex-col">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div class="flex items-center space-x-2.5">
+                    <div class="w-8 h-8 rounded-lg bg-amber-600 text-white flex items-center justify-center font-bold text-sm">
+                        <i class="fa-solid fa-users-gear"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-bold text-slate-900">Manage Staff Credentials (Firebase)</h3>
+                        <p class="text-xs text-slate-500">Add staff manually or upload a CSV file with passwords</p>
+                    </div>
+                </div>
+                <button onclick="closeModal('manageStaffModal')" class="text-slate-400 hover:text-slate-600 text-lg">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Add Single Staff Form -->
+            <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-3">
+                <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Add Single Staff Member</h4>
+                <div class="grid grid-cols-1 sm:grid-cols-4 gap-2">
+                    <input type="text" id="newStaffName" placeholder="Full Name *" class="text-xs p-2 border border-slate-300 rounded-lg outline-none">
+                    <select id="newStaffRole" class="text-xs p-2 border border-slate-300 rounded-lg outline-none font-semibold">
+                        <option value="Teacher">Teacher</option>
+                        <option value="Admin">Admin</option>
+                    </select>
+                    <input type="text" id="newStaffGrade" placeholder="Grade / Subject" class="text-xs p-2 border border-slate-300 rounded-lg outline-none">
+                    <input type="password" id="newStaffPass" placeholder="Password *" class="text-xs p-2 border border-slate-300 rounded-lg outline-none font-mono">
+                </div>
+                <button onclick="addSingleStaffFirebase()" class="px-4 py-1.5 text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 rounded-lg transition inline-flex items-center shadow-sm">
+                    <i class="fa-solid fa-user-plus mr-1.5"></i> Add Staff to Firebase
+                </button>
+            </div>
+
+            <!-- Bulk Staff CSV Upload -->
+            <div class="bg-indigo-50/70 p-3.5 rounded-xl border border-indigo-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                    <h4 class="text-xs font-bold text-indigo-950 uppercase tracking-wider">Bulk CSV Import</h4>
+                    <p class="text-[11px] text-slate-500">Columns format: <code>Full Name, Role, Password, Grade</code></p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="downloadStaffCsvTemplate()" class="px-3 py-1.5 text-xs font-semibold text-indigo-700 bg-white hover:bg-indigo-50 border border-indigo-200 rounded-xl transition inline-flex items-center">
+                        <i class="fa-solid fa-file-arrow-down mr-1"></i> Template (.csv)
+                    </button>
+                    <label class="px-3.5 py-1.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition cursor-pointer shrink-0 inline-flex items-center">
+                        <i class="fa-solid fa-file-csv mr-1.5"></i> Upload CSV
+                        <input type="file" id="staffCsvFileInput" accept=".csv" onchange="uploadStaffCSV(event)" class="hidden">
+                    </label>
+                </div>
+            </div>
+
+            <!-- Current Staff Roster List -->
+            <div class="flex-1 overflow-y-auto space-y-2 border border-slate-200 rounded-xl p-3 bg-white">
+                <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Current Staff Roster (<span id="staffRosterCount">0</span>)</h4>
+                <div id="manageStaffList" class="space-y-1.5"></div>
+            </div>
+
+            <div class="flex items-center justify-end pt-2 border-t border-slate-100">
+                <button onclick="closeModal('manageStaffModal')" class="px-4 py-2 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition">Done</button>
+            </div>
+        </div>
+    </div>
 
     <!-- MODAL: ADD STUDENT (WITH STUDENT ID, GRADE, SECTION) -->
     <div id="addStudentModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center hidden no-print p-4">
@@ -856,25 +980,15 @@
         </div>
     </div>
 
-    <!-- APPLICATION SCRIPT LOGIC -->
+    <!-- APPLICATION SCRIPT LOGIC (FIREBASE POWERED) -->
     <script>
-        // BACKEND SCRIPT URL (Configured with the newly deployed Web App endpoint)
-        const EMBEDDED_SHEET_URL = 'https://script.google.com/macros/s/AKfycbwR3_op7urqFGjiVYntKPTJlRmgMfyMPhUuRWKYEA-mKAMY7MiQo2X-y7AmJKMNAziu/exec';
-        let storedUrl = localStorage.getItem('AL_ROWAD_SHEET_URL');
-
-        // Automatically migrate any legacy or cached URL to the new live deployment
-        if (!storedUrl || storedUrl.includes('AKfycbwZ7VWzygtaRFs9') || storedUrl.trim() === '') {
-            storedUrl = EMBEDDED_SHEET_URL;
-            localStorage.setItem('AL_ROWAD_SHEET_URL', storedUrl);
-        }
-
-        let GOOGLE_SHEET_URL = storedUrl;
-        const STORAGE_KEY_PREFIX = 'AL_ROWAD_INTERVENTION_APP_';
+        const STORAGE_KEY_PREFIX = 'AL_ROWAD_INTERVENTION_FIREBASE_';
         const AIS_LOGO = 'logo.png';
 
         // Active State
         let currentUser = null; // { name: '', role: 'Teacher' | 'Admin' }
         let currentStudentChart = null;
+        let availableStaff = [];
 
         let appState = {
             header: {
@@ -882,8 +996,7 @@
                 grade: '',
                 week: '',
                 date: new Date().toISOString().split('T')[0],
-                subject: 'English Language',
-                googleSheetUrl: GOOGLE_SHEET_URL
+                subject: 'English Language'
             },
             students: [],
             weeklyMarks: {},
@@ -894,13 +1007,7 @@
 
         window.addEventListener('DOMContentLoaded', () => {
             document.querySelectorAll('.ais-logo').forEach(img => { img.src = AIS_LOGO; });
-            const settingsInput = document.getElementById('settingsGoogleSheetUrl');
-            if (settingsInput) settingsInput.value = GOOGLE_SHEET_URL;
-            const adminInput = document.getElementById('adminGoogleSheetUrl');
-            if (adminInput) adminInput.value = GOOGLE_SHEET_URL;
-
-            // Fetch Staff list for login dropdown
-            fetchStaffList();
+            loadStoredStaff();
 
             // Check existing session
             const savedSession = sessionStorage.getItem('AL_ROWAD_AUTH_USER');
@@ -924,39 +1031,69 @@
             document.getElementById('authModal').classList.add('hidden');
         }
 
-        async function fetchStaffList() {
-            const select = document.getElementById('loginTeacherSelect');
-            try {
-                const res = await fetch(`${GOOGLE_SHEET_URL}?action=getTeachers`, { method: 'GET' });
-                const data = await res.json();
-                if (data && data.success && data.staff && data.staff.length > 0) {
-                    select.innerHTML = '<option value="">-- Choose Your Name --</option>';
-                    data.staff.forEach(member => {
-                        const opt = document.createElement('option');
-                        opt.value = member.name;
-                        opt.dataset.role = member.role;
-                        opt.textContent = `${member.name} (${member.role})`;
-                        select.appendChild(opt);
-                    });
-                    return;
-                }
-            } catch (err) {
-                console.warn("Could not fetch remote staff list, using built-in staff roster:", err);
+        // Bridge function called by Firestore real-time listener
+        window.syncStaffFromFirebase = function(remoteStaff) {
+            if (!Array.isArray(remoteStaff)) return;
+            availableStaff = remoteStaff;
+
+            // If remote staff is completely empty, initialize default staff in Firestore
+            if (availableStaff.length === 0) {
+                seedDefaultStaffFirebase();
+                return;
             }
 
-            // Built-in roster fallback
+            localStorage.setItem('AL_ROWAD_STAFF_LIST', JSON.stringify(availableStaff));
+            renderLoginStaffDropdown();
+            renderManageStaffList();
+        };
+
+        function loadStoredStaff() {
+            const cached = localStorage.getItem('AL_ROWAD_STAFF_LIST');
+            if (cached) {
+                try {
+                    availableStaff = JSON.parse(cached);
+                } catch(e) {}
+            }
+            if (availableStaff.length === 0) {
+                availableStaff = [
+                    { id: 'Amanullah_Khan', name: "Amanullah Khan", role: "Admin", password: "admin123", grade: "HOD" },
+                    { id: 'Ahmad_Hassan', name: "Mr. Ahmad Hassan", role: "Teacher", password: "teach123", grade: "Grade 10" },
+                    { id: 'Sarah_Al_Otaibi', name: "Ms. Sarah Al-Otaibi", role: "Teacher", password: "teach123", grade: "Grade 9" },
+                    { id: 'Tariq_Mansoor', name: "Mr. Tariq Mansoor", role: "Teacher", password: "teach123", grade: "Grade 8" }
+                ];
+            }
+            renderLoginStaffDropdown();
+        }
+
+        async function seedDefaultStaffFirebase() {
             const defaultStaff = [
-                { name: "Amanullah Khan", role: "Admin" },
-                { name: "Mr. Ahmad Hassan", role: "Teacher" },
-                { name: "Ms. Sarah Al-Otaibi", role: "Teacher" },
-                { name: "Mr. Tariq Mansoor", role: "Teacher" }
+                { id: 'Amanullah_Khan', name: "Amanullah Khan", role: "Admin", password: "admin123", grade: "HOD" },
+                { id: 'Ahmad_Hassan', name: "Mr. Ahmad Hassan", role: "Teacher", password: "teach123", grade: "Grade 10" },
+                { id: 'Sarah_Al_Otaibi', name: "Ms. Sarah Al-Otaibi", role: "Teacher", password: "teach123", grade: "Grade 9" },
+                { id: 'Tariq_Mansoor', name: "Mr. Tariq Mansoor", role: "Teacher", password: "teach123", grade: "Grade 8" }
             ];
+
+            try {
+                const { doc, setDoc } = window.firestoreTools;
+                for (const member of defaultStaff) {
+                    await setDoc(doc(window.db, "staff", member.id), member);
+                }
+            } catch (err) {
+                console.warn("Could not seed default staff to Firebase:", err);
+            }
+        }
+
+        function renderLoginStaffDropdown() {
+            const select = document.getElementById('loginTeacherSelect');
+            if (!select) return;
+
             select.innerHTML = '<option value="">-- Choose Your Name --</option>';
-            defaultStaff.forEach(member => {
+            const sorted = [...availableStaff].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+            sorted.forEach(member => {
                 const opt = document.createElement('option');
                 opt.value = member.name;
-                opt.dataset.role = member.role;
-                opt.textContent = `${member.name} (${member.role})`;
+                opt.dataset.role = member.role || 'Teacher';
+                opt.textContent = `${member.name} (${member.role || 'Teacher'})`;
                 select.appendChild(opt);
             });
         }
@@ -975,72 +1112,34 @@
             btnSubmit.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Verifying...';
             feedback.classList.remove('hidden', 'bg-red-50', 'text-red-700', 'bg-emerald-50', 'text-emerald-700');
             feedback.classList.add('bg-blue-50', 'text-blue-700');
-            feedback.innerText = "Authenticating with Staff_Credentials database...";
+            feedback.innerText = "Authenticating with Firebase Firestore...";
 
             let authenticated = false;
             let verifiedRole = select.options[select.selectedIndex]?.dataset.role || "Teacher";
 
-            // 1. Primary Attempt: POST
-            try {
-                const postRes = await fetch(GOOGLE_SHEET_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify({
-                        action: 'login',
-                        teacher: teacherName,
-                        password: password
-                    })
-                });
-                const postData = await postRes.json();
-                if (postData && postData.success) {
-                    authenticated = true;
-                    verifiedRole = postData.role || verifiedRole;
-                } else if (postData && postData.message) {
-                    throw new Error(postData.message);
-                }
-            } catch (postErr) {
-                console.warn("POST auth failed, trying GET fallback:", postErr);
-                // 2. Secondary Attempt: GET fallback (bypasses CORS & redirect restrictions)
-                try {
-                    const getUrl = `${GOOGLE_SHEET_URL}?action=login&teacher=${encodeURIComponent(teacherName)}&password=${encodeURIComponent(password)}`;
-                    const getRes = await fetch(getUrl, { method: 'GET' });
-                    const getData = await getRes.json();
-                    if (getData && getData.success) {
-                        authenticated = true;
-                        verifiedRole = getData.role || verifiedRole;
-                    }
-                } catch (getErr) {
-                    console.warn("GET auth failed, checking offline credentials:", getErr);
-                }
-            }
-
-            // 3. Fallback check for built-in credentials if backend is offline or connecting
-            if (!authenticated) {
-                if (teacherName === "Amanullah Khan" && password === "admin123") {
-                    authenticated = true;
-                    verifiedRole = "Admin";
-                } else if (password === "teach123" && teacherName !== "Amanullah Khan") {
-                    authenticated = true;
-                    verifiedRole = "Teacher";
-                }
+            // Verify with loaded staff
+            const match = availableStaff.find(s => s.name === teacherName);
+            if (match && match.password === password) {
+                authenticated = true;
+                verifiedRole = match.role || verifiedRole;
+            } else if (!match && teacherName === "Amanullah Khan" && password === "admin123") {
+                authenticated = true;
+                verifiedRole = "Admin";
             }
 
             if (authenticated) {
                 feedback.className = "text-xs rounded-lg p-2.5 font-medium bg-emerald-50 text-emerald-700";
                 feedback.innerText = `✓ Access granted as ${verifiedRole}! Loading workspace...`;
 
-                currentUser = {
-                    name: teacherName,
-                    role: verifiedRole
-                };
+                currentUser = { name: teacherName, role: verifiedRole };
                 sessionStorage.setItem('AL_ROWAD_AUTH_USER', JSON.stringify(currentUser));
 
                 setTimeout(() => {
                     onUserAuthenticated(currentUser, true);
-                }, 400);
+                }, 350);
             } else {
                 feedback.className = "text-xs rounded-lg p-2.5 font-medium bg-red-50 text-red-700";
-                feedback.innerText = "❌ Incorrect password. (Default Admin password is 'admin123').";
+                feedback.innerText = "❌ Incorrect password. Please try again or ask Admin.";
                 btnSubmit.disabled = false;
                 btnSubmit.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i><span>Authenticate &amp; Load Portal</span>';
             }
@@ -1055,21 +1154,24 @@
 
             const adminNotice = document.getElementById('adminNoticeBanner');
             const adminTabBtn = document.getElementById('btn-adminDashboardTab');
+            const headerManageStaff = document.getElementById('headerManageStaffBtn');
 
             if (user.role === 'Admin') {
                 if (adminNotice) adminNotice.classList.remove('hidden');
                 if (adminTabBtn) adminTabBtn.classList.remove('hidden');
+                if (headerManageStaff) headerManageStaff.classList.remove('hidden');
             } else {
                 if (adminNotice) adminNotice.classList.add('hidden');
                 if (adminTabBtn) adminTabBtn.classList.add('hidden');
+                if (headerManageStaff) headerManageStaff.classList.add('hidden');
             }
 
             // Initialize app state
             appState.header.teacher = user.name;
             document.getElementById('headerTeacher').value = user.name;
 
-            // Load data from designated sheet tab
-            await loadTeacherDataFromSheet(user.name);
+            // Load data from Firebase
+            await loadTeacherDataFromFirebase(user.name);
 
             populateHeaderUI();
             renderRosterTable();
@@ -1088,100 +1190,141 @@
             location.reload();
         }
 
-        async function loadTeacherDataFromSheet(teacherName) {
+        /* FIREBASE TEACHER DATA SYNC */
+        async function loadTeacherDataFromFirebase(teacherName) {
+            if (!teacherName) return;
             const badge = document.getElementById('saveBadge');
-            if (badge) badge.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1.5 text-sky-400"></i> Loading Tab...';
+            if (badge) badge.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1.5 text-sky-400"></i> Loading Firebase...';
+
+            const cleanDocId = teacherName.replace(/[^a-zA-Z0-9_-]/g, '_');
 
             try {
-                const res = await fetch(`${GOOGLE_SHEET_URL}?action=getTeacherData&teacher=${encodeURIComponent(teacherName)}`, { method: 'GET' });
-                const result = await res.json();
+                const { doc, getDoc } = window.firestoreTools;
+                const docSnap = await getDoc(doc(window.db, "intervention_records", cleanDocId));
 
-                if (result && result.success && result.data) {
-                    appState = Object.assign(appState, result.data);
+                if (docSnap.exists()) {
+                    const remoteData = docSnap.data();
+                    if (remoteData.appState) {
+                        appState = Object.assign(appState, remoteData.appState);
+                    } else {
+                        appState = Object.assign(appState, remoteData);
+                    }
                     appState.header.teacher = teacherName;
                     saveToLocalStorage();
-                    if (badge) badge.innerHTML = '<i class="fa-solid fa-check mr-1.5 text-emerald-400"></i> Synced with Tab';
+                    if (badge) badge.innerHTML = '<i class="fa-solid fa-check mr-1.5 text-emerald-400"></i> Synced with Firebase';
                     return;
                 }
             } catch (err) {
-                console.warn("Could not load from remote tab, loading local cache:", err);
+                console.warn("Could not load from Firebase, falling back to local cache:", err);
             }
 
             loadFromLocalStorage(teacherName);
-            if (badge) badge.innerHTML = '<i class="fa-solid fa-cloud-arrow-up mr-1.5 text-emerald-400"></i> Offline Cache Active';
+            if (badge) badge.innerHTML = '<i class="fa-solid fa-cloud mr-1.5 text-emerald-400"></i> Firebase Ready';
         }
 
-        async function syncToGoogleSheets(silent = false) {
+        async function saveCurrentTeacherToFirebase(silent = false) {
             if (!currentUser) return;
             const badge = document.getElementById('saveBadge');
             const msgEl = document.getElementById('syncStatusMsg');
 
-            if (badge) badge.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1.5 text-amber-400"></i> Syncing...';
+            if (badge) badge.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1.5 text-amber-400"></i> Saving to Cloud...';
             if (msgEl) {
                 msgEl.classList.remove('hidden', 'text-red-600', 'text-emerald-600');
                 msgEl.classList.add('text-slate-600');
-                msgEl.innerText = `Syncing records to teacher tab [${currentUser.name}]...`;
+                msgEl.innerText = `Saving records to Firebase collection [intervention_records/${currentUser.name}]...`;
             }
 
             saveToLocalStorage();
 
+            const cleanDocId = currentUser.name.replace(/[^a-zA-Z0-9_-]/g, '_');
+
             try {
-                const payload = {
-                    action: 'syncTeacherData',
+                const { doc, setDoc } = window.firestoreTools;
+                await setDoc(doc(window.db, "intervention_records", cleanDocId), {
                     teacher: currentUser.name,
-                    payload: appState
-                };
-
-                const res = await fetch(GOOGLE_SHEET_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify(payload)
-                });
-
-                const result = await res.json();
+                    role: currentUser.role,
+                    updatedAt: new Date().toISOString(),
+                    appState: appState
+                }, { merge: true });
 
                 if (badge) {
-                    badge.innerHTML = '<i class="fa-solid fa-check mr-1.5 text-emerald-400"></i> Synced to Sheet';
+                    badge.innerHTML = '<i class="fa-solid fa-check mr-1.5 text-emerald-400"></i> Saved to Firebase';
                     setTimeout(() => {
-                        badge.innerHTML = '<i class="fa-solid fa-cloud-arrow-up mr-1.5 text-emerald-400"></i> Auto-Saved';
+                        badge.innerHTML = '<i class="fa-solid fa-cloud mr-1.5 text-emerald-400"></i> Firebase Live';
                     }, 3000);
                 }
 
                 if (msgEl) {
                     msgEl.classList.add('text-emerald-600');
-                    msgEl.innerText = `✓ Synced to tab [${currentUser.name}] at ${new Date().toLocaleTimeString()}`;
+                    msgEl.innerText = `✓ Synced to Firebase document [${currentUser.name}] at ${new Date().toLocaleTimeString()}`;
                 }
             } catch (err) {
-                console.error("Sheet sync failed:", err);
-                if (badge) badge.innerHTML = '<i class="fa-solid fa-cloud-arrow-up mr-1.5 text-emerald-400"></i> Saved Locally';
+                console.error("Firebase save failed:", err);
+                if (badge) badge.innerHTML = '<i class="fa-solid fa-triangle-exclamation mr-1.5 text-rose-400"></i> Offline Cache Active';
                 if (msgEl) {
-                    msgEl.classList.add('text-amber-600');
-                    msgEl.innerText = "⚠ Remote sync pending. Data safely preserved in local browser memory.";
+                    msgEl.classList.add('text-rose-600');
+                    msgEl.innerText = `⚠ Error saving to Firebase: ${err.message}`;
                 }
             }
         }
 
+        /* ADMIN CONSOLIDATED QUERY ACROSS ALL TEACHER DOCUMENTS */
         async function loadAdminData() {
             const tbody = document.getElementById('adminTbody');
             const cardsContainer = document.getElementById('adminTeacherCards');
             if (!tbody || !cardsContainer) return;
 
-            tbody.innerHTML = '<tr><td colspan="8" class="text-center p-6 text-slate-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i> Querying all teacher tabs in spreadsheet...</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="9" class="text-center p-6 text-slate-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i> Querying all teacher documents in Firebase Firestore...</td></tr>';
             cardsContainer.innerHTML = '';
 
             try {
-                const res = await fetch(`${GOOGLE_SHEET_URL}?action=getAdminDashboard`, { method: 'GET' });
-                const result = await res.json();
+                const { collection, getDocs } = window.firestoreTools;
+                const snapshot = await getDocs(collection(window.db, "intervention_records"));
 
-                if (result && result.success && result.data) {
-                    renderAdminDashboard(result.data);
-                    return;
-                }
+                const teachersSummary = [];
+                const allFlagged = [];
+
+                snapshot.forEach((docSnap) => {
+                    const record = docSnap.data();
+                    const state = record.appState || record;
+                    const teacherName = record.teacher || docSnap.id;
+                    const gradeName = state.header?.grade || 'General';
+
+                    const students = Array.isArray(state.students) ? state.students : [];
+                    const marks = state.weeklyMarks || {};
+                    const plans = Array.isArray(state.interventionPlans) ? state.interventionPlans : [];
+                    const logs = Array.isArray(state.parentLogs) ? state.parentLogs : [];
+
+                    const flagged = students.filter(s => s.flagged);
+                    flagged.forEach(st => {
+                        allFlagged.push({
+                            ...st,
+                            teacher: teacherName,
+                            grade: st.grade || gradeName,
+                            marks: marks[st.id] || {}
+                        });
+                    });
+
+                    teachersSummary.push({
+                        teacher: teacherName,
+                        grade: gradeName,
+                        flaggedCount: flagged.length,
+                        plansCount: plans.length,
+                        logsCount: logs.length,
+                        lastSynced: record.updatedAt ? new Date(record.updatedAt).toLocaleTimeString() : 'Recent'
+                    });
+                });
+
+                renderAdminDashboard({
+                    flaggedStudents: allFlagged,
+                    teachersSummary: teachersSummary
+                });
+                return;
             } catch (err) {
-                console.warn("Remote admin consolidation query failed, presenting local active session:", err);
+                console.warn("Remote admin consolidation query failed, using active session:", err);
             }
 
-            // Local fallback
+            // Local session fallback
             renderAdminDashboard({
                 flaggedStudents: appState.students.filter(s => s.flagged).map(s => ({
                     ...s,
@@ -1201,7 +1344,6 @@
             tbody.innerHTML = '';
             cardsContainer.innerHTML = '';
 
-            // Render Teacher Summaries
             (data.teachersSummary || []).forEach(t => {
                 const card = document.createElement('div');
                 card.className = 'p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-2';
@@ -1217,12 +1359,15 @@
                         <span>Plans: <strong>${t.plansCount}</strong></span>
                         <span>Parent Logs: <strong>${t.logsCount}</strong></span>
                     </div>
+                    <button onclick="adminInspectTeacher('${escapeHtml(t.teacher)}')" class="w-full mt-1.5 py-1.5 bg-brand-700 hover:bg-brand-800 text-white text-[11px] font-bold rounded-lg transition flex items-center justify-center gap-1.5 shadow-sm">
+                        <i class="fa-solid fa-folder-open text-xs"></i> Inspect Teacher Workspace
+                    </button>
                 `;
                 cardsContainer.appendChild(card);
             });
 
             if (!data.flaggedStudents || data.flaggedStudents.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="8" class="text-center p-8 text-slate-400">No flagged students currently recorded across teacher tabs.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="9" class="text-center p-8 text-slate-400">No flagged students recorded in Firebase.</td></tr>';
                 return;
             }
 
@@ -1241,10 +1386,76 @@
                     <td class="p-3 text-center">${escapeHtml(m.writing || 'N')}</td>
                     <td class="p-3 text-center">${escapeHtml(m.beh || 'Off-Task')}</td>
                     <td class="p-3 text-center">${escapeHtml(m.hw || '1')}</td>
-                    <td class="p-3 text-center"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 uppercase">Urgent Intervention</span></td>
+                    <td class="p-3 text-center"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 uppercase">Urgent Support</span></td>
+                    <td class="p-3 text-center">
+                        <button onclick="adminViewStudentReport('${escapeHtml(st.teacher)}', '${escapeHtml(st.id)}')" class="px-2.5 py-1 bg-brand-800 hover:bg-brand-900 text-white text-[11px] font-semibold rounded-lg shadow-sm transition inline-flex items-center gap-1.5" title="View and Print Student Intervention Report">
+                            <i class="fa-solid fa-id-card text-sky-200"></i> View / Print Report
+                        </button>
+                    </td>
                 `;
                 tbody.appendChild(tr);
             });
+        }
+
+        /* ADMIN WORKSPACE INSPECTION & STUDENT REPORT VIEWING */
+        async function adminInspectTeacher(teacherName) {
+            if (!teacherName) return;
+            await loadTeacherDataFromFirebase(teacherName);
+            populateHeaderUI();
+            renderRosterTable();
+            renderParentLogTable();
+            renderInterventionList();
+            populateStudentDropdowns();
+            updateStatsCounters();
+
+            showAdminInspectingBanner(teacherName);
+            switchTab('weeklyTab');
+        }
+
+        async function adminViewStudentReport(teacherName, studentId) {
+            if (!teacherName || !studentId) return;
+            if (appState.header.teacher !== teacherName) {
+                await loadTeacherDataFromFirebase(teacherName);
+                populateHeaderUI();
+                renderRosterTable();
+                renderParentLogTable();
+                renderInterventionList();
+                populateStudentDropdowns();
+                updateStatsCounters();
+                showAdminInspectingBanner(teacherName);
+            }
+
+            const select = document.getElementById('individualStudentSelect');
+            if (select) select.value = studentId;
+            switchTab('individualTab');
+        }
+
+        function showAdminInspectingBanner(teacherName) {
+            const banner = document.getElementById('adminInspectionBanner');
+            const label = document.getElementById('adminInspectingTeacherName');
+            if (banner && label) {
+                label.innerText = teacherName;
+                banner.classList.remove('hidden');
+            }
+        }
+
+        function hideAdminInspectingBanner() {
+            const banner = document.getElementById('adminInspectionBanner');
+            if (banner) banner.classList.add('hidden');
+        }
+
+        async function exitAdminInspectionMode() {
+            hideAdminInspectingBanner();
+            if (currentUser) {
+                await loadTeacherDataFromFirebase(currentUser.name);
+                populateHeaderUI();
+                renderRosterTable();
+                renderParentLogTable();
+                renderInterventionList();
+                populateStudentDropdowns();
+                updateStatsCounters();
+                switchTab('adminDashboardTab');
+            }
         }
 
         function filterAdminTable() {
@@ -1254,6 +1465,126 @@
             });
         }
 
+        /* MANAGE STAFF & PASSWORDS (ADMIN FEATURE) */
+        function openManageStaffModal() {
+            renderManageStaffList();
+            document.getElementById('manageStaffModal').classList.remove('hidden');
+        }
+
+        function renderManageStaffList() {
+            const container = document.getElementById('manageStaffList');
+            const countEl = document.getElementById('staffRosterCount');
+            if (!container) return;
+
+            container.innerHTML = '';
+            if (countEl) countEl.innerText = availableStaff.length;
+
+            availableStaff.forEach(staff => {
+                const div = document.createElement('div');
+                div.className = "flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs";
+                div.innerHTML = `
+                    <div>
+                        <span class="font-bold text-slate-900">${escapeHtml(staff.name)}</span>
+                        <span class="ml-1.5 px-2 py-0.5 rounded text-[10px] font-semibold ${staff.role === 'Admin' ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-800'}">${escapeHtml(staff.role || 'Teacher')}</span>
+                        <span class="text-slate-500 text-[11px] ml-1">(${escapeHtml(staff.grade || 'English')})</span>
+                        <span class="ml-2 font-mono text-[10px] bg-white border border-slate-200 px-1.5 py-0.5 rounded text-slate-600">Password: ${escapeHtml(staff.password || '')}</span>
+                    </div>
+                    ${staff.name === 'Amanullah Khan' ? '<span class="text-[10px] font-bold text-slate-400 mr-2">HOD Master</span>' : `
+                    <button onclick="deleteStaffFirebase('${staff.id}')" class="text-rose-500 hover:text-rose-700 p-1" title="Delete staff member">
+                        <i class="fa-regular fa-trash-can"></i>
+                    </button>`}
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        async function addSingleStaffFirebase() {
+            const name = document.getElementById('newStaffName').value.trim();
+            const role = document.getElementById('newStaffRole').value;
+            const grade = document.getElementById('newStaffGrade').value.trim() || 'English';
+            const password = document.getElementById('newStaffPass').value.trim();
+
+            if (!name || !password) {
+                alert("Please enter both Full Name and Password.");
+                return;
+            }
+
+            const staffId = name.replace(/[^a-zA-Z0-9_-]/g, '_');
+            const staffObj = { id: staffId, name, role, grade, password };
+
+            try {
+                const { doc, setDoc } = window.firestoreTools;
+                await setDoc(doc(window.db, "staff", staffId), staffObj);
+
+                document.getElementById('newStaffName').value = '';
+                document.getElementById('newStaffGrade').value = '';
+                document.getElementById('newStaffPass').value = '';
+                alert(`Staff member ${name} added to Firebase.`);
+            } catch (err) {
+                alert("Error saving staff to Firebase: " + err.message);
+            }
+        }
+
+        function downloadStaffCsvTemplate() {
+            const csvContent = "Full_Name,Role,Password,Grade\nMr. Tariq Mansoor,Teacher,teach123,Grade 8\nMs. Fatima Zahra,Teacher,teach123,Grade 10\n";
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = "Staff_Roster_Template.csv";
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+        }
+
+        async function uploadStaffCSV(event) {
+            const file = event.target.files?.[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                const text = e.target.result;
+                const lines = text.split('\n');
+                let count = 0;
+
+                for (let i = 0; i < lines.length; i++) {
+                    const line = lines[i].trim();
+                    if (!line || line.toLowerCase().startsWith('full_name') || line.toLowerCase().startsWith('name')) continue;
+
+                    const parts = line.split(',').map(p => p.trim().replace(/^["']|["']$/g, ''));
+                    if (parts.length >= 3) {
+                        const name = parts[0];
+                        const role = parts[1] || 'Teacher';
+                        const password = parts[2];
+                        const grade = parts[3] || 'English';
+
+                        if (name && password) {
+                            const staffId = name.replace(/[^a-zA-Z0-9_-]/g, '_');
+                            const { doc, setDoc } = window.firestoreTools;
+                            await setDoc(doc(window.db, "staff", staffId), {
+                                id: staffId, name, role, grade, password
+                            });
+                            count++;
+                        }
+                    }
+                }
+                alert(`Successfully imported ${count} staff member(s) into Firebase.`);
+                event.target.value = '';
+            };
+            reader.readAsText(file);
+        }
+
+        async function deleteStaffFirebase(staffId) {
+            if (!confirm("Are you sure you want to remove this staff member from Firebase?")) return;
+            try {
+                const { doc, deleteDoc } = window.firestoreTools;
+                await deleteDoc(doc(window.db, "staff", staffId));
+            } catch (err) {
+                alert("Error deleting staff: " + err.message);
+            }
+        }
+
+        /* HEADER UI & ROSTER MANAGEMENT */
         function populateHeaderUI() {
             document.getElementById('headerTeacher').value = appState.header.teacher || '';
             document.getElementById('headerGrade').value = appState.header.grade || '';
@@ -1494,7 +1825,6 @@
                 });
                 appState.weeklyMarks[newId] = { att: 'P', part: 'Needs Encouragement', beh: 'Off-Task', cw: '2', hw: '1', books: 'N', quiz: '5/10', midterm: '55%', project: '6/10', reading: 'N', writing: 'N' };
 
-                // Seed initial longitudinal history for Chart.js
                 appState.studentHistory[newId] = [
                     { week: 'Week 1', date: '2026-09-01', reading: 45, writing: 40, behavior: 60, effort: 50 },
                     { week: 'Week 2', date: '2026-09-08', reading: 50, writing: 45, behavior: 65, effort: 55 },
@@ -1644,7 +1974,6 @@
             document.getElementById('planProblemDesc').value = plan.problemDesc || '';
             document.getElementById('planGoalText').value = plan.goalText || '';
 
-            // Checkboxes
             const weaknesses = plan.weaknesses || [];
             document.querySelectorAll('input[name="weakness"]').forEach(cb => {
                 cb.checked = weaknesses.includes(cb.value);
@@ -1668,7 +1997,6 @@
             const accommodations = Array.from(document.querySelectorAll('input[name="accommodation"]:checked')).map(cb => cb.value);
 
             if (editPlanId) {
-                // Update existing plan
                 const existingPlan = appState.interventionPlans.find(p => p.id === editPlanId);
                 if (existingPlan) {
                     existingPlan.studentId = studentSelect.value;
@@ -1691,7 +2019,6 @@
                 }
             }
 
-            // Create new plan
             const newPlan = {
                 id: 'ip_' + Date.now(),
                 studentId: studentSelect.value,
@@ -1810,7 +2137,6 @@
             const displaySection = student.section ? ` / Section ${student.section}` : '';
             const studentCode = student.studentId || ('S' + student.id.slice(-6));
 
-            // Helpers for visual badges & icons
             const getAttendanceBadge = (val) => {
                 if (val === 'P') return '<span class="px-2 py-0.5 rounded text-xs font-semibold bg-emerald-100 text-emerald-800"><i class="fa-solid fa-circle-check mr-1 text-[10px]"></i> Present (P)</span>';
                 if (val === 'A') return '<span class="px-2 py-0.5 rounded text-xs font-semibold bg-red-100 text-red-800"><i class="fa-solid fa-circle-xmark mr-1 text-[10px]"></i> Absent (A)</span>';
@@ -1841,7 +2167,6 @@
                 return `<span class="text-slate-600">${val || '-'}</span>`;
             };
 
-            // Longitudinal checkpoints
             if (!appState.studentHistory[student.id] || appState.studentHistory[student.id].length === 0) {
                 appState.studentHistory[student.id] = [
                     { week: 'Week 1', date: '2026-09-01', reading: 45, writing: 40, behavior: 60, effort: 50 },
@@ -1853,7 +2178,7 @@
             const history = appState.studentHistory[student.id];
 
             container.innerHTML = `
-                <!-- WATERMARK (Print-only) -->
+                <!-- WATERMARK -->
                 <div class="report-watermark" style="position:absolute; inset:0; align-items:center; justify-content:center; pointer-events:none; z-index:0; overflow:hidden;">
                     <img src="${AIS_LOGO}" alt="" style="width:340px; height:auto; max-height:340px; object-fit:contain; opacity:0.04; border:none;">
                 </div>
@@ -1878,7 +2203,7 @@
                     <div style="height:3px; background:linear-gradient(90deg,#0c4a6e 0%, #f59e0b 50%, #0c4a6e 100%); margin-top:-3px;"></div>
                 </div>
 
-                <!-- STUDENT METADATA CARD (WITH STUDENT ID, FULL CLASS & SECTION DISPLAY) -->
+                <!-- STUDENT METADATA CARD -->
                 <div class="pdf-avoid-break relative overflow-hidden text-white p-5 rounded-xl shadow-sm flex flex-wrap justify-between items-center gap-4 mt-6" style="z-index:1; background:linear-gradient(120deg,#0c4a6e 0%,#0f172a 100%); border:1px solid #0c4a6e; border-left:5px solid #f59e0b;">
                     <div class="space-y-1">
                         <div class="flex items-center space-x-2">
@@ -1959,7 +2284,6 @@
                         </div>
                     </div>
 
-                    <!-- TEST & ASSESSMENT STRIP -->
                     <div class="bg-slate-100 p-3 rounded-lg border border-slate-200 flex flex-wrap justify-around items-center text-xs font-semibold text-slate-700 gap-2">
                         <div><i class="fa-solid fa-pen-nib text-brand-600 mr-1.5"></i> Quiz Evaluation: <span class="text-slate-900 font-bold ml-1">${escapeHtml(marks.quiz || 'N/A')}</span></div>
                         <div class="hidden sm:block border-r border-slate-300 h-4"></div>
@@ -1969,7 +2293,7 @@
                     </div>
                 </div>
 
-                <!-- SECTION 3: STRUCTURED INTERVENTION ACTION PLAN WITH OBSERVED IMPACT -->
+                <!-- SECTION 3: STRUCTURED INTERVENTION ACTION PLAN -->
                 <div class="pdf-avoid-break space-y-3">
                     <h3 class="text-xs font-bold uppercase tracking-wider text-slate-800 flex items-center gap-2 border-b-2 border-slate-200 pb-2">
                         <span class="inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-extrabold text-white flex-shrink-0" style="background:#0c4a6e;">3</span>
@@ -1986,7 +2310,6 @@
                                 <span class="text-slate-600 font-medium">Review Schedule: <strong>${escapeHtml(p.startDate)}</strong> to <strong>${escapeHtml(p.reviewDate)}</strong></span>
                             </div>
 
-                            <!-- OBSERVED CLASSROOM IMPACT / SPECIFIC DIFFICULTY -->
                             <div class="bg-amber-50/70 p-3 rounded-lg border border-amber-200">
                                 <span class="font-bold text-amber-900 block mb-1">
                                     <i class="fa-solid fa-eye text-amber-600 mr-1.5"></i> Observed Classroom Impact / Specific Difficulty:
@@ -2078,21 +2401,9 @@
                 </div>
             `;
 
-            // Initialize Chart.js
             setTimeout(() => {
                 renderChart(history);
             }, 50);
-        }
-
-        function printIndividualStudent(studentId) {
-            const select = document.getElementById('individualStudentSelect');
-            if (select) {
-                select.value = studentId;
-            }
-            switchTab('individualTab');
-            setTimeout(() => {
-                window.print();
-            }, 250);
         }
 
         function renderChart(history) {
@@ -2109,10 +2420,8 @@
             const behaviorData = history.map(h => h.behavior);
             const effortData = history.map(h => h.effort);
 
-            // Dynamically calculate max bar thickness so bars smoothly get thinner as more weeks are logged
             const computedMaxBarThickness = Math.max(3, Math.min(36, Math.floor(280 / (labels.length * 4))));
 
-            // RENDER GROUPED BAR CHART
             currentStudentChart = new Chart(ctx, {
                 type: 'bar',
                 data: {
@@ -2121,7 +2430,7 @@
                         {
                             label: 'Reading Score',
                             data: readingData,
-                            backgroundColor: '#0284c7', // Brand 600
+                            backgroundColor: '#0284c7',
                             borderRadius: 3,
                             barPercentage: 0.85,
                             categoryPercentage: 0.85,
@@ -2130,7 +2439,7 @@
                         {
                             label: 'Writing Score',
                             data: writingData,
-                            backgroundColor: '#7c3aed', // Purple 600
+                            backgroundColor: '#7c3aed',
                             borderRadius: 3,
                             barPercentage: 0.85,
                             categoryPercentage: 0.85,
@@ -2139,7 +2448,7 @@
                         {
                             label: 'Behavior Rating',
                             data: behaviorData,
-                            backgroundColor: '#10b981', // Emerald 500
+                            backgroundColor: '#10b981',
                             borderRadius: 3,
                             barPercentage: 0.85,
                             categoryPercentage: 0.85,
@@ -2148,7 +2457,7 @@
                         {
                             label: 'Homework / Effort',
                             data: effortData,
-                            backgroundColor: '#f59e0b', // Amber 500
+                            backgroundColor: '#f59e0b',
                             borderRadius: 3,
                             barPercentage: 0.85,
                             categoryPercentage: 0.85,
@@ -2173,9 +2482,7 @@
                                 text: 'Performance Level (%)',
                                 font: { size: 10, weight: 'bold' }
                             },
-                            grid: {
-                                color: '#f1f5f9'
-                            }
+                            grid: { color: '#f1f5f9' }
                         },
                         x: {
                             ticks: {
@@ -2183,9 +2490,7 @@
                                 maxRotation: labels.length > 5 ? 45 : 0,
                                 autoSkip: false
                             },
-                            grid: {
-                                display: false
-                            }
+                            grid: { display: false }
                         }
                     },
                     plugins: {
@@ -2254,7 +2559,6 @@
             triggerDebouncedSync();
         }
 
-        // HIGH-DPI & SHARP PDF EXPORT FUNCTION (html2pdf.js)
         function exportStudentProfilePDF() {
             const select = document.getElementById('individualStudentSelect');
             const student = appState.students.find(s => s.id === select.value);
@@ -2370,8 +2674,8 @@
                         renderInterventionList();
                         populateStudentDropdowns();
                         updateStatsCounters();
-                        syncToGoogleSheets(false);
-                        alert("Data backup successfully restored and synchronized!");
+                        saveCurrentTeacherToFirebase(false);
+                        alert("Data backup successfully restored and synchronized to Firebase!");
                     }
                 } catch (err) {
                     alert("Error parsing JSON file. Please ensure it is a valid backup file.");
@@ -2380,23 +2684,8 @@
             reader.readAsText(file);
         }
 
-        function updateGoogleSheetUrl(newUrl) {
-            if (!newUrl || !newUrl.trim()) return;
-            GOOGLE_SHEET_URL = newUrl.trim();
-            localStorage.setItem('AL_ROWAD_SHEET_URL', GOOGLE_SHEET_URL);
-            appState.header.googleSheetUrl = GOOGLE_SHEET_URL;
-            
-            const settingsInput = document.getElementById('settingsGoogleSheetUrl');
-            if (settingsInput) settingsInput.value = GOOGLE_SHEET_URL;
-            const adminInput = document.getElementById('adminGoogleSheetUrl');
-            if (adminInput) adminInput.value = GOOGLE_SHEET_URL;
-
-            saveToLocalStorage();
-            syncToGoogleSheets(false);
-        }
-
         function confirmResetData() {
-            const confirmed = window.confirm("Are you sure you want to clear your local cache for this teacher? Your records on the Google Sheet remain safe.");
+            const confirmed = window.confirm("Are you sure you want to clear your local cache for this teacher? Your records in Firebase Cloud remain safe.");
             if (confirmed) {
                 const key = STORAGE_KEY_PREFIX + (currentUser ? currentUser.name : 'DEFAULT');
                 localStorage.removeItem(key);
@@ -2404,13 +2693,12 @@
             }
         }
 
-        // DEBOUNCED AUTO-SYNC
         let syncTimeout = null;
         function triggerDebouncedSync() {
             if (syncTimeout) clearTimeout(syncTimeout);
             syncTimeout = setTimeout(() => {
-                syncToGoogleSheets(true);
-            }, 2000);
+                saveCurrentTeacherToFirebase(true);
+            }, 2500);
         }
 
         function saveToLocalStorage() {
