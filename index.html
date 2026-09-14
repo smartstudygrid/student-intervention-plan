@@ -146,6 +146,20 @@
 
             <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4 text-xs">
                 <div>
+                    <label class="block font-semibold text-slate-700 uppercase tracking-wider mb-1">School Section</label>
+                    <div class="relative">
+                        <select id="loginSectionFilter" onchange="filterLoginStaffDropdown()" class="w-full text-xs font-semibold rounded-lg border-slate-300 border p-2.5 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-brand-600 focus:outline-none pr-8">
+                            <option value="">-- All Sections --</option>
+                            <option value="Boys Section">Boys Section</option>
+                            <option value="Girls Section">Girls Section</option>
+                        </select>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-400">
+                            <i class="fa-solid fa-school-flag"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
                     <label class="block font-semibold text-slate-700 uppercase tracking-wider mb-1">Select Staff Member</label>
                     <div class="relative">
                         <select id="loginTeacherSelect" required class="w-full text-xs font-medium rounded-lg border-slate-300 border p-2.5 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-brand-600 focus:outline-none pr-8">
@@ -699,15 +713,21 @@
                     </button>
                 </div>
                 <input type="hidden" id="editStaffId" value="">
-                <div class="grid grid-cols-1 sm:grid-cols-5 gap-2">
-                    <input type="text" id="newStaffName" placeholder="Full Name *" class="text-xs p-2 border border-slate-300 rounded-lg outline-none">
-                    <input type="email" id="newStaffEmail" placeholder="Email Address" class="text-xs p-2 border border-slate-300 rounded-lg outline-none">
+                <div class="grid grid-cols-1 sm:grid-cols-6 gap-2">
+                    <input type="text" id="newStaffName" placeholder="Full Name *" class="text-xs p-2 border border-slate-300 rounded-lg outline-none col-span-1 sm:col-span-2">
+                    <select id="newStaffSection" class="text-xs p-2 border border-slate-300 rounded-lg outline-none font-semibold">
+                        <option value="Boys Section">Boys Section</option>
+                        <option value="Girls Section">Girls Section</option>
+                    </select>
                     <select id="newStaffRole" class="text-xs p-2 border border-slate-300 rounded-lg outline-none font-semibold">
                         <option value="Teacher">Teacher</option>
                         <option value="Admin">Admin</option>
                     </select>
                     <input type="text" id="newStaffGrade" placeholder="Grade / Subject" class="text-xs p-2 border border-slate-300 rounded-lg outline-none">
                     <input type="text" id="newStaffPass" placeholder="Password *" class="text-xs p-2 border border-slate-300 rounded-lg outline-none font-mono">
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <input type="email" id="newStaffEmail" placeholder="Email Address (optional)" class="text-xs p-2 border border-slate-300 rounded-lg outline-none">
                 </div>
                 <div id="staffModalFeedback" class="hidden text-xs rounded-lg p-2 font-medium"></div>
                 <div class="flex items-center gap-2">
@@ -722,7 +742,7 @@
             <div class="bg-indigo-50/70 p-3.5 rounded-xl border border-indigo-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
                     <h4 class="text-xs font-bold text-indigo-950 uppercase tracking-wider">Bulk CSV Import</h4>
-                    <p class="text-[11px] text-slate-500">Columns format: <code>Full Name, Role, Password, Grade, Email</code></p>
+                    <p class="text-[11px] text-slate-500">Columns: <code>Full Name, Section, Role, Password, Grade, Email</code></p>
                 </div>
                 <div class="flex items-center gap-2">
                     <button onclick="downloadStaffCsvTemplate()" class="px-3 py-1.5 text-xs font-semibold text-indigo-700 bg-white hover:bg-indigo-50 border border-indigo-200 rounded-xl transition inline-flex items-center">
@@ -991,6 +1011,29 @@
         </div>
     </div>
 
+    <!-- MODAL: IN-APP CONFIRMATION & ALERT DIALOG -->
+    <div id="customConfirmModal" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center hidden no-print p-4">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-slate-100 space-y-4 transform transition-all">
+            <div class="flex items-start space-x-3.5">
+                <div id="confirmModalIconWrapper" class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-lg shrink-0">
+                    <i id="confirmModalIcon" class="fa-solid fa-triangle-exclamation"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <h3 id="confirmModalTitle" class="text-sm font-bold text-slate-900">Confirmation</h3>
+                    <p id="confirmModalMessage" class="text-xs text-slate-500 mt-1 leading-relaxed">Are you sure you want to proceed?</p>
+                </div>
+            </div>
+            <div class="flex items-center justify-end space-x-2 pt-2 border-t border-slate-100">
+                <button type="button" id="confirmModalCancelBtn" onclick="closeConfirmModal(false)" class="px-3.5 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition">
+                    Cancel
+                </button>
+                <button type="button" id="confirmModalConfirmBtn" onclick="closeConfirmModal(true)" class="px-4 py-1.5 text-xs font-bold text-white bg-red-600 hover:bg-red-700 rounded-xl shadow-sm transition">
+                    Confirm
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- APPLICATION SCRIPT LOGIC (FIREBASE POWERED) -->
     <script>
         const STORAGE_KEY_PREFIX = 'AL_ROWAD_INTERVENTION_FIREBASE_';
@@ -1000,6 +1043,73 @@
         let currentUser = null; // { name: '', role: 'Teacher' | 'Admin' }
         let currentStudentChart = null;
         let availableStaff = [];
+        let confirmModalCallback = null;
+
+        /* IN-APP CONFIRMATION & ALERT SYSTEM */
+        function showAppConfirm({ title = "Confirm Action", message = "Are you sure?", icon = "fa-triangle-exclamation", iconColor = "amber", confirmText = "Confirm", cancelText = "Cancel", confirmColor = "bg-red-600 hover:bg-red-700", onConfirm = null }) {
+            document.getElementById('confirmModalTitle').innerText = title;
+            document.getElementById('confirmModalMessage').innerText = message;
+            
+            const iconWrapper = document.getElementById('confirmModalIconWrapper');
+            const iconEl = document.getElementById('confirmModalIcon');
+            iconEl.className = `fa-solid ${icon}`;
+            
+            if (iconColor === 'red') {
+                iconWrapper.className = "w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center text-lg shrink-0";
+            } else if (iconColor === 'blue') {
+                iconWrapper.className = "w-10 h-10 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center text-lg shrink-0";
+            } else if (iconColor === 'emerald') {
+                iconWrapper.className = "w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg shrink-0";
+            } else {
+                iconWrapper.className = "w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-lg shrink-0";
+            }
+            
+            const cancelBtn = document.getElementById('confirmModalCancelBtn');
+            cancelBtn.classList.remove('hidden');
+            cancelBtn.innerText = cancelText;
+            
+            const confirmBtn = document.getElementById('confirmModalConfirmBtn');
+            confirmBtn.innerText = confirmText;
+            confirmBtn.className = `px-4 py-1.5 text-xs font-bold text-white ${confirmColor} rounded-xl shadow-sm transition`;
+            
+            confirmModalCallback = onConfirm;
+            document.getElementById('customConfirmModal').classList.remove('hidden');
+        }
+
+        function showAppAlert({ title = "Notice", message = "", icon = "fa-circle-info", iconColor = "blue", okText = "OK", onOk = null }) {
+            document.getElementById('confirmModalTitle').innerText = title;
+            document.getElementById('confirmModalMessage').innerText = message;
+            
+            const iconWrapper = document.getElementById('confirmModalIconWrapper');
+            const iconEl = document.getElementById('confirmModalIcon');
+            iconEl.className = `fa-solid ${icon}`;
+            
+            if (iconColor === 'emerald') {
+                iconWrapper.className = "w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg shrink-0";
+            } else if (iconColor === 'red') {
+                iconWrapper.className = "w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center text-lg shrink-0";
+            } else {
+                iconWrapper.className = "w-10 h-10 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center text-lg shrink-0";
+            }
+            
+            const cancelBtn = document.getElementById('confirmModalCancelBtn');
+            cancelBtn.classList.add('hidden');
+            
+            const confirmBtn = document.getElementById('confirmModalConfirmBtn');
+            confirmBtn.innerText = okText;
+            confirmBtn.className = "px-4 py-1.5 text-xs font-bold text-white bg-brand-800 hover:bg-brand-900 rounded-xl shadow-sm transition";
+            
+            confirmModalCallback = onOk;
+            document.getElementById('customConfirmModal').classList.remove('hidden');
+        }
+
+        function closeConfirmModal(isConfirmed) {
+            document.getElementById('customConfirmModal').classList.add('hidden');
+            if (isConfirmed && typeof confirmModalCallback === 'function') {
+                confirmModalCallback();
+            }
+            confirmModalCallback = null;
+        }
 
         let appState = {
             header: {
@@ -1067,10 +1177,10 @@
             }
             if (availableStaff.length === 0) {
                 availableStaff = [
-                    { id: 'Amanullah_Khan', name: "Amanullah Khan", role: "Admin", password: "admin123", grade: "HOD" },
-                    { id: 'Ahmad_Hassan', name: "Mr. Ahmad Hassan", role: "Teacher", password: "teach123", grade: "Grade 10" },
-                    { id: 'Sarah_Al_Otaibi', name: "Ms. Sarah Al-Otaibi", role: "Teacher", password: "teach123", grade: "Grade 9" },
-                    { id: 'Tariq_Mansoor', name: "Mr. Tariq Mansoor", role: "Teacher", password: "teach123", grade: "Grade 8" }
+                    { id: 'Amanullah_Khan', name: "Amanullah Khan", section: "Boys Section", role: "Admin", password: "admin123", grade: "HOD" },
+                    { id: 'Ahmad_Hassan', name: "Mr. Ahmad Hassan", section: "Boys Section", role: "Teacher", password: "teach123", grade: "Grade 10" },
+                    { id: 'Sarah_Al_Otaibi', name: "Ms. Sarah Al-Otaibi", section: "Girls Section", role: "Teacher", password: "teach123", grade: "Grade 9" },
+                    { id: 'Tariq_Mansoor', name: "Mr. Tariq Mansoor", section: "Boys Section", role: "Teacher", password: "teach123", grade: "Grade 8" }
                 ];
             }
             renderLoginStaffDropdown();
@@ -1078,10 +1188,10 @@
 
         async function seedDefaultStaffFirebase() {
             const defaultStaff = [
-                { id: 'Amanullah_Khan', name: "Amanullah Khan", role: "Admin", password: "admin123", grade: "HOD" },
-                { id: 'Ahmad_Hassan', name: "Mr. Ahmad Hassan", role: "Teacher", password: "teach123", grade: "Grade 10" },
-                { id: 'Sarah_Al_Otaibi', name: "Ms. Sarah Al-Otaibi", role: "Teacher", password: "teach123", grade: "Grade 9" },
-                { id: 'Tariq_Mansoor', name: "Mr. Tariq Mansoor", role: "Teacher", password: "teach123", grade: "Grade 8" }
+                { id: 'Amanullah_Khan', name: "Amanullah Khan", section: "Boys Section", role: "Admin", password: "admin123", grade: "HOD" },
+                { id: 'Ahmad_Hassan', name: "Mr. Ahmad Hassan", section: "Boys Section", role: "Teacher", password: "teach123", grade: "Grade 10" },
+                { id: 'Sarah_Al_Otaibi', name: "Ms. Sarah Al-Otaibi", section: "Girls Section", role: "Teacher", password: "teach123", grade: "Grade 9" },
+                { id: 'Tariq_Mansoor', name: "Mr. Tariq Mansoor", section: "Boys Section", role: "Teacher", password: "teach123", grade: "Grade 8" }
             ];
 
             try {
@@ -1094,17 +1204,29 @@
             }
         }
 
-        function renderLoginStaffDropdown() {
+        function filterLoginStaffDropdown() {
+            const sectionFilter = document.getElementById('loginSectionFilter')?.value || '';
+            renderLoginStaffDropdown(sectionFilter);
+        }
+
+        function renderLoginStaffDropdown(sectionFilter = '') {
             const select = document.getElementById('loginTeacherSelect');
             if (!select) return;
 
             select.innerHTML = '<option value="">-- Choose Your Name --</option>';
-            const sorted = [...availableStaff].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+            
+            let filtered = [...availableStaff];
+            if (sectionFilter) {
+                filtered = filtered.filter(m => (m.section || 'Boys Section') === sectionFilter);
+            }
+
+            const sorted = filtered.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
             sorted.forEach(member => {
                 const opt = document.createElement('option');
                 opt.value = member.name;
                 opt.dataset.role = member.role || 'Teacher';
-                opt.textContent = `${member.name} (${member.role || 'Teacher'})`;
+                const secBadge = member.section === 'Girls Section' ? 'Girls' : 'Boys';
+                opt.textContent = `${member.name} (${member.role || 'Teacher'} • ${secBadge})`;
                 select.appendChild(opt);
             });
         }
@@ -1492,13 +1614,17 @@
             if (countEl) countEl.innerText = availableStaff.length;
 
             availableStaff.forEach(staff => {
+                const isGirls = staff.section === 'Girls Section';
                 const div = document.createElement('div');
                 div.className = "flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs";
                 div.innerHTML = `
                     <div class="flex-1 min-w-0 pr-2">
                         <div class="flex items-center flex-wrap gap-1.5">
                             <span class="font-bold text-slate-900">${escapeHtml(staff.name)}</span>
-                            <span class="px-2 py-0.5 rounded text-[10px] font-semibold ${staff.role === 'Admin' ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-800'}">${escapeHtml(staff.role || 'Teacher')}</span>
+                            <span class="px-2 py-0.5 rounded text-[10px] font-semibold ${isGirls ? 'bg-pink-100 text-pink-800' : 'bg-blue-100 text-blue-800'}">
+                                <i class="fa-solid ${isGirls ? 'fa-venus' : 'fa-mars'} mr-1"></i>${escapeHtml(staff.section || 'Boys Section')}
+                            </span>
+                            <span class="px-2 py-0.5 rounded text-[10px] font-semibold ${staff.role === 'Admin' ? 'bg-amber-100 text-amber-800' : 'bg-slate-200 text-slate-700'}">${escapeHtml(staff.role || 'Teacher')}</span>
                             <span class="text-slate-500 text-[11px]">(${escapeHtml(staff.grade || 'English')})</span>
                             ${staff.email ? `<span class="text-slate-500 text-[11px] flex items-center gap-1"><i class="fa-regular fa-envelope text-[10px]"></i> ${escapeHtml(staff.email)}</span>` : ''}
                         </div>
@@ -1526,6 +1652,7 @@
 
             document.getElementById('editStaffId').value = staff.id;
             document.getElementById('newStaffName').value = staff.name || '';
+            document.getElementById('newStaffSection').value = staff.section || 'Boys Section';
             document.getElementById('newStaffEmail').value = staff.email || '';
             document.getElementById('newStaffRole').value = staff.role || 'Teacher';
             document.getElementById('newStaffGrade').value = staff.grade || '';
@@ -1545,6 +1672,7 @@
         function cancelEditStaff() {
             document.getElementById('editStaffId').value = '';
             document.getElementById('newStaffName').value = '';
+            document.getElementById('newStaffSection').value = 'Boys Section';
             document.getElementById('newStaffEmail').value = '';
             document.getElementById('newStaffRole').value = 'Teacher';
             document.getElementById('newStaffGrade').value = '';
@@ -1568,6 +1696,7 @@
         async function saveStaffFirebase() {
             const editId = document.getElementById('editStaffId').value.trim();
             const name = document.getElementById('newStaffName').value.trim();
+            const section = document.getElementById('newStaffSection').value;
             const email = document.getElementById('newStaffEmail').value.trim();
             const role = document.getElementById('newStaffRole').value;
             const grade = document.getElementById('newStaffGrade').value.trim() || 'English';
@@ -1579,7 +1708,7 @@
             }
 
             const staffId = editId || name.replace(/[^a-zA-Z0-9_-]/g, '_');
-            const staffObj = { id: staffId, name, email, role, grade, password };
+            const staffObj = { id: staffId, name, section, email, role, grade, password };
 
             try {
                 const { doc, setDoc } = window.firestoreTools;
@@ -1592,13 +1721,8 @@
             }
         }
 
-        // Backward compatibility alias
-        function addSingleStaffFirebase() {
-            return saveStaffFirebase();
-        }
-
         function downloadStaffCsvTemplate() {
-            const csvContent = "Full_Name,Role,Password,Grade,Email\nMr. Tariq Mansoor,Teacher,teach123,Grade 8,tmansoor@alrowad.edu.sa\nMs. Fatima Zahra,Teacher,teach123,Grade 10,fzahra@alrowad.edu.sa\n";
+            const csvContent = "Full_Name,Section,Role,Password,Grade,Email\nMr. Tariq Mansoor,Boys Section,Teacher,teach123,Grade 8,tmansoor@alrowad.edu.sa\nMs. Fatima Zahra,Girls Section,Teacher,teach123,Grade 10,fzahra@alrowad.edu.sa\n";
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -1626,16 +1750,32 @@
                     const parts = line.split(',').map(p => p.trim().replace(/^["']|["']$/g, ''));
                     if (parts.length >= 3) {
                         const name = parts[0];
-                        const role = parts[1] || 'Teacher';
-                        const password = parts[2];
-                        const grade = parts[3] || 'English';
-                        const email = parts[4] || '';
+                        // Auto-detect if column 1 is section or role
+                        let section = "Boys Section";
+                        let role = "Teacher";
+                        let password = "";
+                        let grade = "English";
+                        let email = "";
+
+                        if (parts[1] && (parts[1].toLowerCase().includes('girl') || parts[1].toLowerCase().includes('boy'))) {
+                            section = parts[1].toLowerCase().includes('girl') ? "Girls Section" : "Boys Section";
+                            role = parts[2] || "Teacher";
+                            password = parts[3] || "teach123";
+                            grade = parts[4] || "English";
+                            email = parts[5] || "";
+                        } else {
+                            // Fallback for previous 5-column format
+                            role = parts[1] || 'Teacher';
+                            password = parts[2] || "teach123";
+                            grade = parts[3] || 'English';
+                            email = parts[4] || '';
+                        }
 
                         if (name && password) {
                             const staffId = name.replace(/[^a-zA-Z0-9_-]/g, '_');
                             const { doc, setDoc } = window.firestoreTools;
                             await setDoc(doc(window.db, "staff", staffId), {
-                                id: staffId, name, role, grade, password, email
+                                id: staffId, name, section, role, grade, password, email
                             }, { merge: true });
                             count++;
                         }
@@ -1647,15 +1787,26 @@
             reader.readAsText(file);
         }
 
-        async function deleteStaffFirebase(staffId) {
-            if (!window.confirm("Are you sure you want to remove this staff member from Firebase?")) return;
-            try {
-                const { doc, deleteDoc } = window.firestoreTools;
-                await deleteDoc(doc(window.db, "staff", staffId));
-                showStaffFeedback("Staff member removed successfully.");
-            } catch (err) {
-                showStaffFeedback("Error deleting staff: " + err.message, false);
-            }
+        function deleteStaffFirebase(staffId) {
+            const staff = availableStaff.find(s => s.id === staffId);
+            const staffName = staff ? staff.name : 'this staff member';
+            showAppConfirm({
+                title: "Remove Staff Member",
+                message: `Are you sure you want to remove "${staffName}" from Firebase? This will permanently delete their account credentials.`,
+                icon: "fa-user-minus",
+                iconColor: "red",
+                confirmText: "Delete Staff",
+                confirmColor: "bg-red-600 hover:bg-red-700",
+                onConfirm: async () => {
+                    try {
+                        const { doc, deleteDoc } = window.firestoreTools;
+                        await deleteDoc(doc(window.db, "staff", staffId));
+                        showStaffFeedback("Staff member removed successfully.");
+                    } catch (err) {
+                        showStaffFeedback("Error deleting staff: " + err.message, false);
+                    }
+                }
+            });
         }
 
         /* HEADER UI & ROSTER MANAGEMENT */
@@ -1858,16 +2009,26 @@
         }
 
         function removeStudent(id) {
-            if (confirm("Remove this student from the intervention follow-up list?")) {
-                appState.students = appState.students.filter(s => s.id !== id);
-                delete appState.weeklyMarks[id];
-                delete appState.studentHistory[id];
-                renderRosterTable();
-                populateStudentDropdowns();
-                updateStatsCounters();
-                saveToLocalStorage();
-                triggerDebouncedSync();
-            }
+            const student = appState.students.find(s => s.id === id);
+            const studentName = student ? student.name : 'this student';
+            showAppConfirm({
+                title: "Remove Student",
+                message: `Are you sure you want to remove ${studentName} from the intervention follow-up list?`,
+                icon: "fa-user-xmark",
+                iconColor: "red",
+                confirmText: "Remove Student",
+                confirmColor: "bg-red-600 hover:bg-red-700",
+                onConfirm: () => {
+                    appState.students = appState.students.filter(s => s.id !== id);
+                    delete appState.weeklyMarks[id];
+                    delete appState.studentHistory[id];
+                    renderRosterTable();
+                    populateStudentDropdowns();
+                    updateStatsCounters();
+                    saveToLocalStorage();
+                    triggerDebouncedSync();
+                }
+            });
         }
 
         function openAddStudentModal() {
@@ -1982,11 +2143,21 @@
         }
 
         function deleteParentLog(id) {
-            appState.parentLogs = appState.parentLogs.filter(p => p.id !== id);
-            renderParentLogTable();
-            updateStatsCounters();
-            saveToLocalStorage();
-            triggerDebouncedSync();
+            showAppConfirm({
+                title: "Delete Communication Log",
+                message: "Are you sure you want to delete this parent communication record?",
+                icon: "fa-trash-can",
+                iconColor: "red",
+                confirmText: "Delete Log",
+                confirmColor: "bg-red-600 hover:bg-red-700",
+                onConfirm: () => {
+                    appState.parentLogs = appState.parentLogs.filter(p => p.id !== id);
+                    renderParentLogTable();
+                    updateStatsCounters();
+                    saveToLocalStorage();
+                    triggerDebouncedSync();
+                }
+            });
         }
 
         // INTERVENTION PLANS
@@ -2177,16 +2348,26 @@
         }
 
         function deleteInterventionPlan(planId) {
-            appState.interventionPlans = appState.interventionPlans.filter(p => p.id !== planId);
-            renderInterventionList();
-            document.getElementById('planDetailContainer').innerHTML = `
-                <div class="text-center py-12 text-slate-400">
-                    <i class="fa-solid fa-clipboard-list text-4xl mb-3"></i>
-                    <p class="text-sm">Select an intervention plan from the left list or create a new one to view details.</p>
-                </div>`;
-            updateStatsCounters();
-            saveToLocalStorage();
-            triggerDebouncedSync();
+            showAppConfirm({
+                title: "Delete Intervention Plan",
+                message: "Are you sure you want to delete this SMART intervention plan?",
+                icon: "fa-trash-can",
+                iconColor: "red",
+                confirmText: "Delete Plan",
+                confirmColor: "bg-red-600 hover:bg-red-700",
+                onConfirm: () => {
+                    appState.interventionPlans = appState.interventionPlans.filter(p => p.id !== planId);
+                    renderInterventionList();
+                    document.getElementById('planDetailContainer').innerHTML = `
+                        <div class="text-center py-12 text-slate-400">
+                            <i class="fa-solid fa-clipboard-list text-4xl mb-3"></i>
+                            <p class="text-sm">Select an intervention plan from the left list or create a new one to view details.</p>
+                        </div>`;
+                    updateStatsCounters();
+                    saveToLocalStorage();
+                    triggerDebouncedSync();
+                }
+            });
         }
 
         // INDIVIDUAL STUDENT PROFILE WITH LONGITUDINAL PROGRESS (CHART.JS)
@@ -2589,7 +2770,12 @@
         function openAddProgressPointModal() {
             const select = document.getElementById('individualStudentSelect');
             if (!select || !select.value) {
-                alert("Please select a student profile first from the dropdown.");
+                showAppAlert({
+                    title: "Student Selection Required",
+                    message: "Please select a student profile first from the dropdown before logging a checkpoint.",
+                    icon: "fa-circle-exclamation",
+                    iconColor: "red"
+                });
                 return;
             }
             const history = appState.studentHistory[select.value] || [];
@@ -2608,7 +2794,12 @@
             const select = document.getElementById('individualStudentSelect');
             const studentId = select ? select.value : null;
             if (!studentId) {
-                alert("Please select a valid student.");
+                showAppAlert({
+                    title: "Student Selection Required",
+                    message: "Please select a valid student profile.",
+                    icon: "fa-circle-exclamation",
+                    iconColor: "red"
+                });
                 return;
             }
 
@@ -2749,22 +2940,39 @@
                         populateStudentDropdowns();
                         updateStatsCounters();
                         saveCurrentTeacherToFirebase(false);
-                        alert("Data backup successfully restored and synchronized to Firebase!");
+                        showAppAlert({
+                            title: "Backup Restored",
+                            message: "Data backup was successfully restored and synchronized to Firebase!",
+                            icon: "fa-circle-check",
+                            iconColor: "emerald"
+                        });
                     }
                 } catch (err) {
-                    alert("Error parsing JSON file. Please ensure it is a valid backup file.");
+                    showAppAlert({
+                        title: "Invalid File",
+                        message: "Error parsing JSON file. Please ensure it is a valid backup file.",
+                        icon: "fa-triangle-exclamation",
+                        iconColor: "red"
+                    });
                 }
             };
             reader.readAsText(file);
         }
 
         function confirmResetData() {
-            const confirmed = window.confirm("Are you sure you want to clear your local cache for this teacher? Your records in Firebase Cloud remain safe.");
-            if (confirmed) {
-                const key = STORAGE_KEY_PREFIX + (currentUser ? currentUser.name : 'DEFAULT');
-                localStorage.removeItem(key);
-                location.reload();
-            }
+            showAppConfirm({
+                title: "Clear Local Cache",
+                message: "Are you sure you want to clear your local cache for this teacher? Your records stored safely in Firebase Cloud will NOT be deleted.",
+                icon: "fa-trash-can",
+                iconColor: "red",
+                confirmText: "Clear Cache",
+                confirmColor: "bg-red-600 hover:bg-red-700",
+                onConfirm: () => {
+                    const key = STORAGE_KEY_PREFIX + (currentUser ? currentUser.name : 'DEFAULT');
+                    localStorage.removeItem(key);
+                    location.reload();
+                }
+            });
         }
 
         let syncTimeout = null;
