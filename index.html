@@ -603,30 +603,8 @@
         <section id="settingsTab" class="tab-content hidden space-y-6">
             <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-6">
                 <div>
-                    <h2 class="text-base font-bold text-slate-800">Firebase Firestore Cloud Sync</h2>
-                    <p class="text-xs text-slate-500">Every teacher saves their monitored students directly to their dedicated document in the Google Firebase database.</p>
-                </div>
-
-                <div class="p-5 border border-emerald-200 bg-emerald-50/50 rounded-xl space-y-4">
-                    <div class="flex items-center space-x-3 text-emerald-800">
-                        <div class="p-2.5 bg-emerald-600 text-white rounded-lg shadow-sm">
-                            <i class="fa-solid fa-cloud text-xl"></i>
-                        </div>
-                        <div>
-                            <h3 class="font-bold text-sm text-slate-800">Firebase Firestore Project: <span class="font-mono text-brand-900">igcse-writing-portal</span></h3>
-                            <p class="text-xs text-slate-600">Active Teacher Cloud Document: <strong id="settingsActiveTabName" class="text-brand-900 font-mono">-</strong></p>
-                        </div>
-                    </div>
-
-                    <div class="flex flex-wrap items-center gap-3 pt-2">
-                        <button onclick="saveCurrentTeacherToFirebase(false)" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg shadow transition flex items-center">
-                            <i class="fa-solid fa-cloud-arrow-up mr-2"></i> Save My Records to Firebase Now
-                        </button>
-                        <button onclick="loadTeacherDataFromFirebase(currentUser ? currentUser.name : '')" class="px-4 py-2.5 bg-white hover:bg-slate-100 text-slate-700 text-xs font-semibold rounded-lg border border-slate-300 shadow-sm transition flex items-center">
-                            <i class="fa-solid fa-arrows-rotate mr-2 text-brand-700"></i> Pull Latest from Cloud
-                        </button>
-                    </div>
-                    <div id="syncStatusMsg" class="text-xs font-medium text-slate-600 hidden"></div>
+                    <h2 class="text-base font-bold text-slate-800">Data Export &amp; Offline Backup</h2>
+                    <p class="text-xs text-slate-500">All student records and interventions sync automatically with the cloud in real time. You can also export CSV reports or create offline JSON backups.</p>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
